@@ -1,0 +1,20 @@
+{
+  "name": "architecture-study",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.6.0",
+  "scripts": {
+    "dev": "slidev",
+    "build": "slidev build decks/[0-9][0-9]-*.md",
+    "build:pages": "node scripts/build-pages.mjs",
+    "export": "slidev export decks/[0-9][0-9]-*.md"
+  },
+  "dependencies": {
+    "@slidev/cli": "latest",
+    "@slidev/theme-default": "latest",
+    "vue": "latest"
+  },
+  "devDependencies": {
+    "playwright-chromium": "latest"
+  }
+}
