@@ -487,6 +487,30 @@ Repository を作っても、この競合は自動では消えない。
 -->
 ---
 
+## 転移問題: 座席予約の二重予約
+
+請求書ではなく、座席予約で同じ整合性を考える。
+
+```txt
+Request A: seat 10A が空いていることを確認
+Request B: seat 10A が空いていることを確認
+Request A: reservation を作成
+Request B: reservation を作成
+```
+
+考えること:
+
+- Repositoryを作るだけで二重予約は防げるか
+- unique constraint はどの列に必要か
+- retryされた同じ予約要求をどう冪等にするか
+
+<!--
+話すこと:
+- 問題構造は二重発行と同じ。永続化境界と整合性保証を分けて見る。
+- 「同じ座席を二重に取らない」はDB制約、transaction、idempotencyを組み合わせて考える。
+-->
+---
+
 ## 今日の判断基準
 
 Repository を作る前に、何を隠すのかを言葉にする。

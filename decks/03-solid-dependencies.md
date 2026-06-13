@@ -400,6 +400,36 @@ type InvoiceWriter = {
 -->
 ---
 
+## 転移問題: ローカルファイルとS3
+
+請求書ではなく、ファイル保存で同じ考え方を使う。
+
+```ts
+const uploadDocument = async (
+  file: File,
+  s3: S3Client,
+): Promise<void> => {
+  await s3.putObject({
+    Bucket: "documents",
+    Key: file.name,
+    Body: file.body,
+  })
+}
+```
+
+考えること:
+
+- ユースケースは S3 の詳細を知るべきか
+- 抽象を作るなら、名前は `Storage` か `DocumentStore` か
+- ローカル保存、S3、テスト用Fakeを本当に差し替えたいか
+
+<!--
+話すこと:
+- 請求書以外でも、具体実装へ直接依存してよいかを同じ問いで見られることを確認する。
+- 抽象の名前を技術名ではなく、ユースケース側の言葉に寄せるかを見る。
+-->
+---
+
 ## 今日の判断基準
 
 抽象を作る理由は「何でも差し替え可能にする」ではない。
