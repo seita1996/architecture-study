@@ -215,7 +215,9 @@ type InvoiceRowMapper = {
 }
 
 type InvoiceDataMapper = {
-  findById: (id: InvoiceId) => Promise<Invoice | null>
+  findById: (
+    id: InvoiceId,
+  ) => Promise<Result<Invoice | null, InvoiceMappingError>>
   insert: (invoice: Invoice) => Promise<void>
   update: (invoice: Invoice) => Promise<void>
 }

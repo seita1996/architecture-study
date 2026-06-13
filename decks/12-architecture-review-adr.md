@@ -79,9 +79,9 @@ title: "第12回: 実プロダクト設計レビューとADR"
 | 変更追跡 | 明示保存か、Change Tracking を利用するか |
 | 応答方式 | 呼び出し元が最終処理完了を待つか |
 | 実行配置 | 同一プロセスか、別プロセスか |
-| Transport | 関数呼び出し、HTTP/RPC、Broker messaging のどれか |
-| 配信形態 | Point-to-pointか、Publish-subscribeか |
-| インフラ | どの Broker / Queue service を使うか |
+| 連携方式 | 直接呼び出し、HTTP/RPC、Messaging のどれか |
+| 配信形態 | Messaging を選ぶ場合、Point-to-point か Publish-subscribe か |
+| Messaging infrastructure | Messaging を選ぶ場合、どの Broker / Queue service を使うか |
 | Message semantics | Command か Event か |
 | Delivery semantics | at-most-once / at-least-once をどう扱うか |
 | デプロイ境界 | 同時リリースか、独立リリースか |
@@ -172,8 +172,12 @@ Relevant axes:
 Current design:
 選んだ軸について、現在の依存、データ、transaction、外部I/O
 
-Security:
-誰が操作できるか、他テナントのデータへ触れないか、機密情報を外部へ送らないか、監査対象か
+Quality risks:
+今回関係するものだけ書く
+- 性能・容量
+- 可用性・回復
+- 観測可能性・運用性
+- セキュリティ
 
 Problems:
 どの変更や障害が難しいか
@@ -232,7 +236,7 @@ ADR は、その中の重要な一つの判断を記録するもの。
 | 業務ロジック | Transaction Script / Domain Model のどちらが複雑さに合うか |
 | 永続化 | Write側永続化、Read側取得、Read側モデル、Mapper を混同していないか |
 | 一貫性 | transaction、unique constraint、冪等性が必要か |
-| メッセージング | Message semantics、応答方式、Transport、配信形態を混同していないか |
+| メッセージング | Message semantics、応答方式、連携方式、配信形態を混同していないか |
 | 読み書き | CQRS が必要なほどモデルやスケールが違うか |
 | 性能・容量 | 主要シナリオのレイテンシ、スループット、データ量を満たせるか |
 | 可用性・回復 | どの障害まで継続し、どう再試行・復旧するか |
@@ -315,14 +319,15 @@ Related Decisions:
 | 代替案 | 最低2案を出せる |
 | Trade-off | 利点とコストを両方説明できる |
 | Failure mode | 並行実行、部分失敗、再試行を考慮できる |
-| Security | 権限、テナント境界、機密情報、監査など、専門レビューが必要な論点を検出できる |
+| 品質特性 | 性能、可用性、運用性、セキュリティなど、追加計測や専門レビューが必要な論点を識別できる |
 | 判断 | 制約に基づいて一案を選べる |
 | 不確実性 | 足りない情報を言える |
 | 見直し条件 | 将来の再判断条件を残せる |
 
-16点以上は目安。
-ただし、Failure mode や整合性に関わる重大な見落としがある場合は、点数だけで合格にしない。
-セキュリティはこの勉強会だけで解決能力までは評価せず、専門レビューが必要な論点として識別できるかを見る。
+合計点は参考値。
+必須項目に0点がないか、前後比較でどの観点が伸びたかを重視する。
+ただし、Failure mode、整合性、品質特性に関わる重大な見落としがある場合は、点数だけで合格にしない。
+性能、可用性、運用性、セキュリティは、この勉強会だけで解決能力までは評価せず、追加計測や専門レビューが必要な論点として識別できるかを見る。
 
 <!--
 話すこと:
