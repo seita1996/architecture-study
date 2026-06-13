@@ -270,7 +270,7 @@ features/issue-invoice/issue-invoice-port.ts
 features/issue-invoice/issue-invoice.ts
 features/issue-invoice/invoice.ts
 features/issue-invoice/ports.ts
-features/issue-invoice/prisma-invoice-repository.ts
+features/issue-invoice/prisma-issue-invoice-persistence.ts
 main.ts
 ```
 
@@ -298,20 +298,20 @@ export type IssueInvoice = (
 
 // issue-invoice.ts
 import type { IssueInvoice } from "./issue-invoice-port"
-import type { InvoiceRepository } from "./ports"
+import type { IssueInvoicePersistence } from "./ports"
 import { issueDraftInvoice } from "./invoice"
 
 export const createIssueInvoice = (deps: {
-  invoices: InvoiceRepository
+  persistence: IssueInvoicePersistence
 }): IssueInvoice => async (input) => {
-  const invoice = await deps.invoices.findById(input.invoiceId)
+  const invoice = await deps.persistence.loadInvoice(input.invoiceId)
   if (!invoice) return { type: "not_found" }
   if (invoice.status !== "draft") {
     return { type: "cannot_issue", currentStatus: invoice.status }
   }
 
   const issued = issueDraftInvoice(invoice)
-  await deps.invoices.save(issued)
+  await deps.persistence.saveIssuedInvoice(issued)
   return { type: "issued", invoice: issued }
 }
 
@@ -333,17 +333,21 @@ export const issueDraftInvoice = (invoice: DraftInvoice): IssuedInvoice => ({
 
 // ports.ts
 import type { InvoiceId, Invoice, IssuedInvoice } from "./invoice"
-export type InvoiceRepository = {
-  findById: (id: InvoiceId) => Promise<Invoice | null>
-  save: (invoice: IssuedInvoice) => Promise<void>
+export type IssueInvoicePersistence = {
+  loadInvoice: (id: InvoiceId) => Promise<Invoice | null>
+  saveIssuedInvoice: (invoice: IssuedInvoice) => Promise<void>
 }
 ```
+
+この例では並行実行制御を省略している。
+PortやDomain Modelだけでは二重発行を防げない。
 
 <!--
 話すこと:
 - Input Portは外部からアプリケーションを呼ぶ契約。
 - Application ServiceはPortの型を満たし、Domain関数とOutput Portを使う。
-- Repositoryは全状態を返し、Application Serviceで「存在しない」と「状態が不適切」を分ける。
+- `IssueInvoicePersistence` は汎用Repositoryではなく、請求書発行ユースケース専用のOutput Port。Portは目的ある対話を表す。
+- 全状態を返し、Application Serviceで「存在しない」と「状態が不適切」を分ける。
 - このコードでは並行発行の制御を省略している。実際にはversion付き条件更新、`WHERE status = 'draft'` による conditional update、transaction、冪等性キーなどを検討する。Portを置くだけでは整合性は守れない。
 - 小規模ではDomain型をInput Portの結果として返してもよいが、外部契約を安定させたい場合はApplication DTOへ変換する。
 -->
@@ -369,8 +373,8 @@ export const createInvoiceRoute =
     return toHttpResponse(result)
   }
 
-// prisma-invoice-repository.ts
-import type { InvoiceRepository } from "./ports"
+// prisma-issue-invoice-persistence.ts
+import type { IssueInvoicePersistence } from "./ports"
 import type { InvoiceId, Invoice, IssuedInvoice } from "./invoice"
 type InvoiceRow = {
   id: string
@@ -385,13 +389,13 @@ export type PrismaClient = {
 declare const toInvoice: (row: InvoiceRow) => Invoice
 declare const toInvoiceRow: (invoice: IssuedInvoice) => InvoiceRow
 
-export const createPrismaInvoiceRepository =
-  (prisma: PrismaClient): InvoiceRepository => ({
-    findById: async (id) => {
+export const createPrismaIssueInvoicePersistence =
+  (prisma: PrismaClient): IssueInvoicePersistence => ({
+    loadInvoice: async (id) => {
       const row = await prisma.invoice.findUnique({ where: { id } })
       return row ? toInvoice(row) : null
     },
-    save: async (invoice) => {
+    saveIssuedInvoice: async (invoice) => {
       await prisma.invoice.update({
         where: { id: invoice.id },
         data: toInvoiceRow(invoice),
@@ -403,13 +407,13 @@ export const createPrismaInvoiceRepository =
 import { createInvoiceRoute } from "./routes/invoice-route"
 import { createIssueInvoice } from "./features/issue-invoice/issue-invoice"
 import {
-  createPrismaInvoiceRepository,
+  createPrismaIssueInvoicePersistence,
   type PrismaClient,
-} from "./features/issue-invoice/prisma-invoice-repository"
+} from "./features/issue-invoice/prisma-issue-invoice-persistence"
 
 declare const prisma: PrismaClient
 const issueInvoiceUseCase = createIssueInvoice({
-  invoices: createPrismaInvoiceRepository(prisma),
+  persistence: createPrismaIssueInvoicePersistence(prisma),
 })
 const invoiceRoute = createInvoiceRoute(issueInvoiceUseCase)
 ```
@@ -456,7 +460,7 @@ Unknowns:
 | `issue-invoice.ts` | Application Service / Use Case 実装 |
 | `invoice.ts` | Domain |
 | `ports.ts` | Output Port |
-| `prisma-invoice-repository.ts` | Output Adapter |
+| `prisma-issue-invoice-persistence.ts` | Output Adapter |
 | `main.ts` | Composition Root |
 
 Composition Root は、依存オブジェクトを組み立て、アプリケーションの入口へ渡す場所。

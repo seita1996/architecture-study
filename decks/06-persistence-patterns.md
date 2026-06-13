@@ -289,6 +289,9 @@ Database
 
 ## Repository
 
+以下の例は、DB制約により行データの妥当性が保証され、マッピング異常はデータ破損として例外化する前提。
+`Result` を上位へ伝える設計なら、`findById` の戻り値にも `LoadInvoiceError` を含める。
+
 ```ts
 type InvoiceRepository = {
   findById: (id: InvoiceId) => Promise<Invoice | null>

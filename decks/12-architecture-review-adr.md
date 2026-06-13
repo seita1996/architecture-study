@@ -105,7 +105,7 @@ Driver と問題に関係する軸だけを選び、判断する。
 ## ADR に残す項目
 
 ```md
-# ADR: 請求書発行の境界をどう設計するか
+# ADR: 請求書発行後のメール送信要求をTransactional Outboxへ記録する
 
 ## Status
 Proposed / Accepted / Superseded
@@ -139,6 +139,9 @@ YYYY-MM-DD
 
 ## Related Decisions
 関連ADR
+
+## Follow-up Decisions
+このADRでは固定しない、別途決める判断
 ```
 
 <!--
@@ -182,6 +185,9 @@ Quality risks:
 - 観測可能性・運用性
 - セキュリティ
 - 開発者認知負荷
+
+Driverは達成したい品質と優先度。
+Quality risksは、現在案や代替案で満たせない可能性、検証が必要な不確実性。
 
 Problems:
 どの変更や障害が難しいか
@@ -297,7 +303,9 @@ Rejected Options:
 
 Related Decisions:
   ADR: 請求書発行コードをユースケース単位に配置する。
-  ADR: メール通知には SendInvoiceEmail Command Message を使う。
+
+Follow-up Decisions:
+  メール通知をCommand Messageにするか、InvoiceIssued Eventにするか。
 ```
 
 <!--
@@ -317,10 +325,15 @@ Related Decisions:
 | 2 | 自律的に具体化し、判断へ利用できる |
 | N/A | 今回の問題に直接関係しない理由を説明できる |
 
+N/Aは点数計算から除外する。
+常に評価する項目には原則使用しない。
+問題に関係する場合に評価する項目のみ、関係しない理由を説明できた場合に使用する。
+
 常に評価する項目:
 
 - 問題設定
 - Driver
+- スコープ
 - 設計軸
 - 代替案
 - Trade-off
@@ -330,7 +343,6 @@ Related Decisions:
 
 問題に関係する場合に評価する項目:
 
-- スコープ
 - Failure mode
 - 品質特性
 
