@@ -161,25 +161,25 @@ type PaymentGateway = (input: ChargePayment) => Promise<ChargeResult>
 ```txt
 実行時の呼び出し:
 
-HTTP Adapter -> Input Port -> Application -> Output Port -> Postgres Adapter
+HTTP Adapter -> Application Service -> Repository Adapter
 
-コード上の import 依存:
+契約としての関係:
 
-HTTP Adapter -------> Input Port
-Application --------> Output Port
-Postgres Adapter ---> Output Port
+HTTP Adapter -------------> Input Port
+Application Service -----> implements Input Port
+Application Service -----> Output Port
+Repository Adapter ------> implements Output Port
 ```
 
 外部から来るもの、外部へ出るものを Adapter として扱う。
 
-Output Port から Postgres Adapter へ import するわけではない。
+Port は実行時に処理する中間クラスではなく、境界の契約。
 外側の Adapter が、内側で定義された Port に適合する。
 
 <!--
 話すこと:
-- 表は上から読むだけでなく、横に比べる。何が違うからコストや適用場面が変わるのかを見る。
-- 一つを優秀、一つを劣っていると扱わず、問題設定が変わると選択も変わると説明する。
-- 参加者には、現在のプロダクトならどの列が重要かを考えてもらう。
+- Port を「毎回通過する部品」と誤解しないように、実行時の呼び出しと契約関係を分ける。
+- Output Port から Repository Adapter へ import するわけではない。Adapter が Port に合わせて実装される。
 -->
 ---
 
@@ -270,10 +270,23 @@ main.ts
 - Prisma に合わせているものは何か
 - 依存を組み立てる場所はどこか
 
+次の形式で短く書く。
+
+```txt
+Decision:
+各ファイルをどの役割に分類したか
+
+Drivers:
+そう判断した理由
+
+Unknowns:
+迷った境界
+```
+
 <!--
 話すこと:
-- ここは個人で頭の中で考える時間にする。発言を求めず、コードや構成を見てどこが判断ポイントかを探してもらう。
-- 正解を急がず、迷った箇所を自分で印を付けるくらいで十分だと伝える。
+- ここは各自で短く分類と理由を書いてから答え合わせへ進む。
+- Port と Adapter を、実行時の部品ではなく契約と適合として見られているか確認する。
 - 次のスライドで答え合わせをするので、ここでは自分なりの仮説を持ってもらう。
 -->
 ---

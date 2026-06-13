@@ -229,9 +229,74 @@ type PrismaInvoiceRepository = {
 
 <!--
 話すこと:
-- 表は上から読むだけでなく、横に比べる。何が違うからコストや適用場面が変わるのかを見る。
-- 一つを優秀、一つを劣っていると扱わず、問題設定が変わると選択も変わると説明する。
-- 参加者には、現在のプロダクトならどの列が重要かを考えてもらう。
+- 型名を変えても、呼び出し側が Prisma の都合に依存したままなら境界としては弱い。
+- 抽象は「別名」ではなく、呼び出し側にとって安定した契約になっているかを見る。
+-->
+---
+
+## ISP: 必要な依存だけを渡す
+
+大きな依存契約を、そのまま各ユースケースへ渡していないかを見る。
+
+```ts
+type InvoiceDependencies = {
+  findInvoice: (id: string) => Promise<Invoice | null>
+  saveInvoice: (invoice: Invoice) => Promise<void>
+  sendMail: (invoiceId: string) => Promise<void>
+  exportCsv: (invoiceId: string) => Promise<void>
+  deleteInvoice: (invoiceId: string) => Promise<void>
+}
+
+const cancelInvoice =
+  (deps: InvoiceDependencies) =>
+  async (invoiceId: string): Promise<CancelInvoiceResult> => {
+    const invoice = await deps.findInvoice(invoiceId)
+    if (!invoice) return { type: "not_found" }
+    // cancel
+    const cancelled = { ...invoice, status: "cancelled" as const }
+    await deps.saveInvoice(cancelled)
+    return { type: "cancelled" }
+  }
+```
+
+取消処理は、メール送信、CSV出力、削除には依存していない。
+
+<!--
+話すこと:
+- ISP は class の interface 分割だけの話ではない。関数に渡す依存オブジェクトでも同じ問題が起きる。
+- 使わない依存があると、テスト準備、レビュー、変更影響の読み取りが重くなる。
+-->
+---
+
+## ISP: 契約をユースケースに合わせる
+
+必要なものだけを契約にすると、変更範囲が読みやすくなる。
+
+```ts
+type CancelInvoiceDependencies = {
+  findInvoice: (id: string) => Promise<Invoice | null>
+  saveInvoice: (invoice: Invoice) => Promise<void>
+}
+
+const cancelInvoice =
+  (deps: CancelInvoiceDependencies) =>
+  async (invoiceId: string): Promise<CancelInvoiceResult> => {
+    const invoice = await deps.findInvoice(invoiceId)
+    if (!invoice) return { type: "not_found" }
+    // cancel
+    const cancelled = { ...invoice, status: "cancelled" as const }
+    await deps.saveInvoice(cancelled)
+    return { type: "cancelled" }
+  }
+```
+
+契約は小さければよいのではない。
+使う側の目的と一致していることが重要。
+
+<!--
+話すこと:
+- 依存を細かく分けすぎると逆に組み立てが煩雑になるため、目的単位で狭めると説明する。
+- ここでの判断基準は「このユースケースが知らなくてよいものを受け取っていないか」。
 -->
 ---
 
@@ -288,10 +353,23 @@ const createInvoice = async (
 - `PrismaClient` を差し替えたい理由はあるか
 - 抽象の名前は業務の言葉にできるか
 
+次の形式で 1 行ずつ書く。
+
+```txt
+Decision:
+境界を作る / 作らない / まだ判断しない
+
+Drivers:
+重視した要求や制約
+
+Trade-offs:
+得るものと増えるコスト
+```
+
 <!--
 話すこと:
-- ここは個人で頭の中で考える時間にする。発言を求めず、コードや構成を見てどこが判断ポイントかを探してもらう。
-- 正解を急がず、迷った箇所を自分で印を付けるくらいで十分だと伝える。
+- ここは長い議論ではなく、各自で短く判断を書いてから答え合わせへ進む。
+- 正解を急がず、何を重視したかを外に出すことを優先する。
 - 次のスライドで答え合わせをするので、ここでは自分なりの仮説を持ってもらう。
 -->
 ---
