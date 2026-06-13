@@ -1,9 +1,9 @@
 ---
 theme: default
-title: "第5回: Transaction Script、Service Layer、Domain Model"
+title: "第5回: アプリケーション境界と処理フロー"
 ---
 
-# 第5回: Transaction Script、Service Layer、Domain Model
+# 第5回: アプリケーション境界と処理フロー
 
 業務ロジックの置き場所を比較する
 
@@ -11,7 +11,7 @@ title: "第5回: Transaction Script、Service Layer、Domain Model"
 話すこと:
 - この回は「第5回: Transaction Script、Service Layer、Domain Model」を学ぶ時間だと伝える。最初に正解を覚える場ではなく、判断材料を増やす場だと置く。
 - ジュニア向けには、用語を知っているかではなく、あとで会話に参加できる状態を目標にする。
-- 最後に現在の Vertical Slice + Hexagonal 構成へつながる観点を一つ持ち帰る、と予告する。
+- 最後に現在の設計判断を見直すための観点を一つ持ち帰る、と予告する。
 -->
 ---
 
@@ -195,28 +195,56 @@ const cancelInvoice = (invoice: Invoice): CancelInvoiceResult => {
 -->
 ---
 
+## 用語を固定する
+
+この教材では、近い言葉を次のように使い分ける。
+
+| 用語 | この教材での意味 |
+|---|---|
+| Use Case | ユーザーや外部アクターが達成したい操作 |
+| Input Port | アプリケーションが外部へ公開する操作の契約 |
+| Application Service | Input Port を実装し、ユースケースを進行する処理 |
+| Service Layer | Application Service 群によって形成されるアプリケーション境界 |
+| Domain Service | 特定の Entity や Value Object に自然に属さないドメイン判断 |
+
+完全に一つの言葉へ統一するより、どの粒度を指しているかを明確にする。
+
+<!--
+話すこと:
+- Service という語は曖昧なので、この回以降の読み方をここで固定する。
+- `CancelInvoiceUseCase` は Use Case を実装する Application Service の例だと説明する。
+- Domain Service は I/O の調整役ではなく、ドメイン判断を置く候補だと強調する。
+-->
+---
+
 ## Service Layer
 
 ```ts
 type CancelInvoiceUseCase = (invoiceId: string) => Promise<CancelInvoiceResult>
 
 const createCancelInvoiceUseCase =
-  (deps: { invoices: InvoiceRepository; auditLog: AuditLog }): CancelInvoiceUseCase =>
+  (deps: {
+    transaction: TransactionRunner
+    invoices: InvoiceRepository
+    auditLog: AuditLogRepository
+  }): CancelInvoiceUseCase =>
   async (invoiceId) => {
-    const invoice = await deps.invoices.findById(invoiceId)
+    return deps.transaction.run(async () => {
+      const invoice = await deps.invoices.findById(invoiceId)
 
-    if (!invoice) {
-      return { type: "not_found" }
-    }
+      if (!invoice) {
+        return { type: "not_found" }
+      }
 
-    const result = cancelInvoice(invoice)
+      const result = cancelInvoice(invoice)
 
-    if (result.type === "cancelled") {
-      await deps.invoices.save(result.invoice)
-      await deps.auditLog.record("invoice_cancelled", invoiceId)
-    }
+      if (result.type === "cancelled") {
+        await deps.invoices.save(result.invoice)
+        await deps.auditLog.record("invoice_cancelled", invoiceId)
+      }
 
-    return result
+      return result
+    })
   }
 ```
 
@@ -255,12 +283,17 @@ Service Layer は、業務ルールそのものを全部置く場所ではない
 
 ## 判断基準
 
-| 選択肢 | 適する状況 | 主なコスト |
-|---|---|---|
-| Transaction Script | 単純な CRUD、短い処理 | 複雑化すると手続きが肥大化 |
-| Domain Model | 状態遷移、不変条件が多い | モデリングコスト |
-| Application Service | 複数の外部処理を調整 | 責務が膨らみやすい |
-| Domain Service | 特定のドメイン型に自然に置けない業務判断 | 何でも置き場になりやすい |
+4つから一つを選ぶのではなく、軸を分けて考える。
+
+| 軸 | 選択肢 |
+|---|---|
+| アプリケーション境界 | Application Service / Service Layer |
+| 業務ロジックの表現 | Transaction Script / Domain Model |
+| ドメイン判断の置き場所 | Entity / Value Object / Domain Service |
+
+まず Application Service がユースケースを調整する。
+業務ルールが単純なら、その中の Transaction Script で十分。
+状態遷移や不変条件が増えたら Domain Model へ移す。
 
 <!--
 話すこと:
@@ -330,10 +363,10 @@ const cancel = (invoice: Invoice): CancelResult => {
 
 | 状況 | 向く表現 |
 |---|---|
-| ルールが1つだけ | Transaction Script |
-| 状態遷移が増える | Domain Model |
-| 外部処理の順序が重要 | Service Layer |
-| ドメイン型に自然に置けない判断 | Domain Service を検討 |
+| ルールが1つだけ | Application Service 内の Transaction Script で十分 |
+| 状態遷移が増える | Domain Model へ移す |
+| 外部処理の順序が重要 | Application Service で調整する |
+| ドメイン型に自然に置けない判断 | Domain Service を検討する |
 
 もし次の仕様が増えるなら、案 B が効き始める。
 
@@ -354,13 +387,14 @@ const cancel = (invoice: Invoice): CancelResult => {
 
 ## 今日の判断基準
 
-業務ロジックの置き場所は、複雑さで選ぶ。
+業務ロジックの置き場所は、軸を分けて考える。
 
 | 状況 | 選びやすい形 |
 |---|---|
-| 手順が短く、分岐が少ない | Transaction Script |
+| ユースケースを外部へ公開する | Input Port |
+| ユースケースを進行する | Application Service |
+| 手順が短く、分岐が少ない | Application Service 内の Transaction Script |
 | 状態遷移や不変条件が増える | Domain Model |
-| 外部依存の順序を調整する | Service Layer |
 | ドメイン型に置きにくい業務判断 | Domain Service |
 
 次回は、DB や ORM とドメインをどう分けるかを見る。

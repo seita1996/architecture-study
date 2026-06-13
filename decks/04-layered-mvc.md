@@ -1,9 +1,9 @@
 ---
 theme: default
-title: "第4回: Layered Architecture、N-tier、Package by Layer"
+title: "第4回: 論理構造とコード配置"
 ---
 
-# 第4回: Layered Architecture、N-tier、Package by Layer
+# 第4回: 論理構造とコード配置
 
 最も一般的な構成を理解し、長所と限界を比較する
 
@@ -11,7 +11,7 @@ title: "第4回: Layered Architecture、N-tier、Package by Layer"
 話すこと:
 - この回は「第4回: Layered Architecture、N-tier、Package by Layer」を学ぶ時間だと伝える。最初に正解を覚える場ではなく、判断材料を増やす場だと置く。
 - ジュニア向けには、用語を知っているかではなく、あとで会話に参加できる状態を目標にする。
-- 最後に現在の Vertical Slice + Hexagonal 構成へつながる観点を一つ持ち帰る、と予告する。
+- 最後に現在の設計判断を見直すための観点を一つ持ち帰る、と予告する。
 -->
 ---
 
@@ -123,6 +123,17 @@ MVC も別の話なので、この回では深追いしない。
 
 Layered Architecture は論理的な責務と依存規則の話。
 フォルダ配置は Package by Feature にしてもよい。
+
+N-tier は配置の話。
+
+```txt
+Browser
+  -> Web Server
+  -> Application Process
+  -> Database
+```
+
+Layer が同じプロセス内の責務分割なのに対し、Tier はネットワークやプロセス境界を含む。
 
 <!--
 話すこと:
@@ -252,6 +263,21 @@ Database
 ```
 
 単純な CRUD ではわかりやすい。業務ルールが増えると Service に集中しやすい。
+
+別の表現では、次のようにも見られる。
+
+```txt
+Presentation
+    v
+Application
+    v
+Domain
+
+Infrastructure implements what Application / Domain need
+```
+
+Hexagonal の内側を Application Layer と Domain Layer に分けることもできる。
+Layered と Hexagonal は必ずしも排他的な選択肢ではない。
 
 <!--
 話すこと:

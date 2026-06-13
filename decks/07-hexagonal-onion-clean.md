@@ -1,17 +1,17 @@
 ---
 theme: default
-title: "第7回: Hexagonal、Onion、Clean Architecture"
+title: "第7回: Ports and Adapters"
 ---
 
-# 第7回: Hexagonal、Onion、Clean Architecture
+# 第7回: Ports and Adapters
 
 近縁のアーキテクチャを、同じ問題意識から比較する
 
 <!--
 話すこと:
-- この回は「第7回: Hexagonal、Onion、Clean Architecture」を学ぶ時間だと伝える。最初に正解を覚える場ではなく、判断材料を増やす場だと置く。
+- この回は「第7回: Ports and Adapters」を学ぶ時間だと伝える。最初に正解を覚える場ではなく、判断材料を増やす場だと置く。
 - ジュニア向けには、用語を知っているかではなく、あとで会話に参加できる状態を目標にする。
-- 最後に現在の Vertical Slice + Hexagonal 構成へつながる観点を一つ持ち帰る、と予告する。
+- 最後に現在の設計判断を見直すための観点を一つ持ち帰る、と予告する。
 -->
 ---
 
@@ -21,7 +21,7 @@ title: "第7回: Hexagonal、Onion、Clean Architecture"
 
 <!--
 話すこと:
-- このスライドでは「今回の問い」を、第7回: Hexagonal、Onion、Clean Architecture の理解につながる部品として説明する。
+- このスライドでは「今回の問い」を、第7回: Ports and Adapters の理解につながる部品として説明する。
 - まず何の問題を扱っているのかを確認し、その後で名前や分類を紹介する。
 - 最後に、現在の設計判断にどう関係するかを一言でつなげる。
 -->
@@ -48,9 +48,9 @@ Hexagonal、Onion、Clean を別々の宗派として覚えない。
 
 ## なぜこの話が必要か
 
-フレームワーク、DB、外部 API は変わりやすい。
+フレームワーク、DB、外部 API はアプリケーションの目的そのものではない。
 
-一方で、業務ルールはシステムの中心に置きたい。
+一方で、業務ルールやユースケースはアプリケーションの中心に置きたい。
 
 | 外側に置きたいもの | 中心に置きたいもの |
 |---|---|
@@ -60,6 +60,9 @@ Hexagonal、Onion、Clean を別々の宗派として覚えない。
 | Queue | 不変条件 |
 
 この分離を考える代表例が、Hexagonal、Onion、Clean。
+
+重要なのは変更頻度だけではない。
+外部プロトコルをアプリケーションの言葉へ漏らさず、外部なしでもユースケースを実行・検証できることが大事。
 
 <!--
 話すこと:
@@ -102,7 +105,7 @@ Hexagonal、Onion、Clean を別々の宗派として覚えない。
 
 <!--
 話すこと:
-- このスライドでは「共通する考え方」を、第7回: Hexagonal、Onion、Clean Architecture の理解につながる部品として説明する。
+- このスライドでは「共通する考え方」を、第7回: Ports and Adapters の理解につながる部品として説明する。
 - まず何の問題を扱っているのかを確認し、その後で名前や分類を紹介する。
 - 最後に、現在の設計判断にどう関係するかを一言でつなげる。
 -->
@@ -135,7 +138,7 @@ Adapter は「外側の技術を、その境界に合わせるもの」。
 例:
 
 ```ts
-type IssueInvoice = (command: IssueInvoiceCommand) => Promise<IssueInvoiceResult>
+type IssueInvoice = (input: IssueInvoiceInput) => Promise<IssueInvoiceResult>
 
 type PaymentGateway = (input: ChargePayment) => Promise<ChargeResult>
 ```
@@ -239,7 +242,7 @@ export const createStripePaymentGateway =
 
 <!--
 話すこと:
-- このスライドでは「避けたい結論」を、第7回: Hexagonal、Onion、Clean Architecture の理解につながる部品として説明する。
+- このスライドでは「避けたい結論」を、第7回: Ports and Adapters の理解につながる部品として説明する。
 - まず何の問題を扱っているのかを確認し、その後で名前や分類を紹介する。
 - 最後に、現在の設計判断にどう関係するかを一言でつなげる。
 -->
@@ -307,10 +310,20 @@ Hexagonal、Onion、Clean は、外側の技術から内側の業務ルールを
 
 | 見るもの | 問い |
 |---|---|
-| Port | 内側が必要としている境界か |
+| Port | 外部技術ではなく、アプリケーションと外部の目的ある対話を表しているか |
 | Adapter | 外側の技術を境界に合わせているか |
 | Application | ユースケースの進行役になっているか |
 | Domain | 業務ルールが外部技術から独立しているか |
+
+Port を作る基準:
+
+- アプリケーション上、意味のある外部との会話か
+- 技術固有のプロトコルを内側へ漏らしたくないか
+- 複数 Adapter や隔離実行に意味があるか
+- 明示的な契約として保護する価値があるか
+
+この教材では、実装規約としてユースケース単位の関数型 Input Port を基本にする。
+ただし Port 数は設計判断であり、必ず 1 API = 1 Port ではない。
 
 次回は、これを機能単位の配置である Vertical Slice と組み合わせて考える。
 

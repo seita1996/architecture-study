@@ -11,7 +11,7 @@ title: "第2回: 高凝集・疎結合と変更容易性"
 話すこと:
 - この回は「第2回: 高凝集・疎結合と変更容易性」を学ぶ時間だと伝える。最初に正解を覚える場ではなく、判断材料を増やす場だと置く。
 - ジュニア向けには、用語を知っているかではなく、あとで会話に参加できる状態を目標にする。
-- 最後に現在の Vertical Slice + Hexagonal 構成へつながる観点を一つ持ち帰る、と予告する。
+- 最後に現在の設計判断を見直すための観点を一つ持ち帰る、と予告する。
 -->
 ---
 
@@ -278,7 +278,7 @@ const canTransition = (
 
 ## 答え合わせ: 重複と同じ変更理由は別
 
-この例では、共通化を急がない方がよい。
+この例では、見た目だけで共通化を急がない方がよい。
 
 | 観点 | 判断 |
 |---|---|
@@ -287,17 +287,30 @@ const canTransition = (
 | 言葉の意味 | `cancelled` でも業務上の意味が違う可能性がある |
 | 変更波及 | 契約だけに `expired` が増えても請求書には関係ない |
 
-より安全な形:
+別々の業務概念なら、遷移ルールも分ける。
 
 ```ts
-const validateInvoiceStatus = (status: string): status is InvoiceStatus =>
-  ["draft", "issued", "paid", "cancelled"].includes(status)
+const canTransitionInvoice = (
+  from: InvoiceStatus,
+  to: InvoiceStatus,
+): boolean => {
+  if (from === "issued") return to === "paid" || to === "cancelled"
+  return false
+}
 
-const validateContractStatus = (status: string): status is ContractStatus =>
-  ["draft", "active", "cancelled"].includes(status)
+const canTransitionContract = (
+  from: ContractStatus,
+  to: ContractStatus,
+): boolean => {
+  if (from === "active") return to === "cancelled"
+  return false
+}
 ```
 
-重複削除より、変更理由の違いを守る。
+ただし、共通のワークフロー基盤がプロダクト上の概念として存在するなら共有エンジンは妥当。
+遷移規則の管理、監査、可視化を本当に共通化したいかで判断する。
+
+見た目が同じだから共有するのではなく、共通の変更責任が本当に存在するかを見る。
 
 <!--
 話すこと:
@@ -312,6 +325,7 @@ const validateContractStatus = (status: string): status is ContractStatus =>
 - 共通化する前に「同じ変更理由か」を確認する
 - 変更の波及範囲を説明できる単位で分ける
 - 重複削除より、誤った結合の回避を優先する場面がある
+- 共通基盤が実在するなら、重複削除ではなく概念として共有する
 
 <!--
 話すこと:

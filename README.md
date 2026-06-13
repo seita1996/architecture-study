@@ -2,7 +2,7 @@
 
 TypeScript バックエンドの設計判断をチームで揃えるための Slidev 勉強会資料です。
 
-軸は「主要な設計パターンを比較し、状況に応じて選択できるようになる」ことです。最終的に、現在の Vertical Slice Architecture と Hexagonal Architecture のハイブリッド構成を、流行ではなく要求と制約から説明できる状態を目指します。
+軸は「主要な設計パターンを比較し、状況に応じて選択できるようになる」ことです。最終的に、現在の各設計判断がどの問題と制約に対応しているのかを説明し、不要になった境界や追加すべき境界を見直せる状態を目指します。
 
 各回は用語の前提から丁寧に説明する構成にしています。TypeScript のコード例は `class` / `interface` 中心ではなく、`type` と `const` 関数を中心にした記法で統一しています。
 
@@ -61,18 +61,18 @@ BASE_PATH=/architecture-study/ pnpm build:pages
 
 | 回 | テーマ | 主な問い |
 |---:|---|---|
-| 1 | アーキテクチャとデザインパターンの地図 | 原則、アーキテクチャ、パターン、実装技術を区別できるか |
+| 1 | アーキテクチャは何を決めるのか | 品質特性、要求、制約、設計軸をどう結びつけるか |
 | 2 | 高凝集・疎結合と変更容易性 | 共通化は本当に変更容易性を上げているか |
-| 3 | SOLID と依存関係 | 関数型の抽象はいつ境界として意味を持つか |
-| 4 | Layered Architecture、N-tier、Package by Layer | レイヤー分割と配置の違いは何か |
-| 5 | Transaction Script、Service Layer、Domain Model | 業務ロジックをどこに置くべきか |
-| 6 | Active Record、Data Mapper、Repository、Unit of Work | 永続化の抽象化は何を隠しているか |
-| 7 | Hexagonal、Onion、Clean Architecture | 依存方向を内側へ向けるとはどういうことか |
+| 3 | 契約と依存関係 | DI、DIP、LSP、ISP は境界設計にどう使えるか |
+| 4 | 論理構造とコード配置 | Layered、Package by Layer、Package by Feature、Vertical Slice は何が違うか |
+| 5 | アプリケーション境界と処理フロー | Handler、Input Port、Application Service、Transaction Script の関係は何か |
+| 6 | 永続化と整合性 | ORM直接利用、Mapper、Repository、transaction、一意制約をどう選ぶか |
+| 7 | Ports and Adapters | 外部との目的ある対話をどこで境界にするか |
 | 8 | Vertical Slice Architecture と Package by Feature | 機能単位の凝集はレイヤー分割とどう違うか |
-| 9 | GoF デザインパターン前編 | Strategy、State、Command はいつ効くか |
-| 10 | GoF デザインパターン後編 | Adapter、Facade、Decorator、Factory は既存コードをどう説明するか |
-| 11 | モジュラーモノリス、マイクロサービス、イベント駆動 | デプロイ境界と連携方式をどう分けて考えるか |
-| 12 | CQRS、Event Sourcing、最終設計比較 | 現在の構成を ADR として説明できるか |
+| 9 | モジュール境界とデプロイ境界 | Modular Monolith と Microservices を何から判断するか |
+| 10 | メッセージングと失敗設計 | Command/Event、同期/非同期、冪等性、Retry、Outbox をどう扱うか |
+| 11 | CQRS と Event Sourcing | 読み書きや状態保存を分ける価値がコストを上回るか |
+| 12 | 実プロダクト設計レビューと ADR | 現在の構成を各軸で説明し、見直し条件まで残せるか |
 
 ## ディレクトリ構成
 
@@ -89,10 +89,10 @@ architecture-study/
 │   ├── 06-persistence-patterns.md
 │   ├── 07-hexagonal-onion-clean.md
 │   ├── 08-vertical-slice.md
-│   ├── 09-gof-behavioral.md
-│   ├── 10-gof-structural-creation.md
-│   ├── 11-modular-microservices-events.md
-│   ├── 12-cqrs-event-sourcing-adr.md
+│   ├── 09-module-deployment-boundaries.md
+│   ├── 10-messaging-failure-design.md
+│   ├── 11-cqrs-event-sourcing.md
+│   ├── 12-architecture-review-adr.md
 │   ├── components/
 │   ├── layouts/
 │   └── styles/

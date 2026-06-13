@@ -10,8 +10,8 @@ const distDir = resolve(root, "decks/dist")
 const decks = [
   {
     href: "./01-architecture-map/",
-    title: "第1回: アーキテクチャとデザインパターンの地図",
-    question: "原則、アーキテクチャ、パターン、実装技術を区別できるか",
+    title: "第1回: アーキテクチャは何を決めるのか",
+    question: "品質特性、要求、制約、設計軸をどう結びつけるか",
   },
   {
     href: "./02-cohesion-coupling/",
@@ -20,28 +20,28 @@ const decks = [
   },
   {
     href: "./03-solid-dependencies/",
-    title: "第3回: SOLID と依存関係",
-    question: "関数型の抽象はいつ境界として意味を持つか",
+    title: "第3回: 契約と依存関係",
+    question: "DI、DIP、LSP、ISP は境界設計にどう使えるか",
   },
   {
     href: "./04-layered-mvc/",
-    title: "第4回: Layered Architecture、N-tier、MVC",
-    question: "レイヤー分割は何を明確にし、何を分散させるか",
+    title: "第4回: 論理構造とコード配置",
+    question: "Layered、Package by Layer、Package by Feature、Vertical Slice は何が違うか",
   },
   {
     href: "./05-business-logic-patterns/",
-    title: "第5回: Transaction Script、Service Layer、Domain Model",
-    question: "業務ロジックをどこに置くべきか",
+    title: "第5回: アプリケーション境界と処理フロー",
+    question: "Handler、Input Port、Application Service、Transaction Script の関係は何か",
   },
   {
     href: "./06-persistence-patterns/",
-    title: "第6回: Active Record、Data Mapper、Repository、Unit of Work",
-    question: "永続化の抽象化は何を隠しているか",
+    title: "第6回: 永続化と整合性",
+    question: "ORM直接利用、Mapper、Repository、transaction、一意制約をどう選ぶか",
   },
   {
     href: "./07-hexagonal-onion-clean/",
-    title: "第7回: Hexagonal、Onion、Clean Architecture",
-    question: "依存方向を内側へ向けるとはどういうことか",
+    title: "第7回: Ports and Adapters",
+    question: "外部との目的ある対話をどこで境界にするか",
   },
   {
     href: "./08-vertical-slice/",
@@ -49,24 +49,24 @@ const decks = [
     question: "機能単位の凝集はレイヤー分割とどう違うか",
   },
   {
-    href: "./09-gof-behavioral/",
-    title: "第9回: GoF デザインパターン前編",
-    question: "Strategy、State、Command はいつ効くか",
+    href: "./09-module-deployment-boundaries/",
+    title: "第9回: モジュール境界とデプロイ境界",
+    question: "Modular Monolith と Microservices を何から判断するか",
   },
   {
-    href: "./10-gof-structural-creation/",
-    title: "第10回: GoF デザインパターン後編",
-    question: "Adapter、Facade、Decorator、Factory、Observer は既存コードをどう説明するか",
+    href: "./10-messaging-failure-design/",
+    title: "第10回: メッセージングと失敗設計",
+    question: "Command/Event、同期/非同期、冪等性、Retry、Outbox をどう扱うか",
   },
   {
-    href: "./11-modular-microservices-events/",
-    title: "第11回: モジュラーモノリス、マイクロサービス、イベント駆動",
-    question: "プロセス境界を増やすと何が難しくなるか",
+    href: "./11-cqrs-event-sourcing/",
+    title: "第11回: CQRS と Event Sourcing",
+    question: "読み書きや状態保存を分ける価値がコストを上回るか",
   },
   {
-    href: "./12-cqrs-event-sourcing-adr/",
-    title: "第12回: CQRS、Event Sourcing、最終設計比較",
-    question: "現在の構成を ADR として説明できるか",
+    href: "./12-architecture-review-adr/",
+    title: "第12回: 実プロダクト設計レビューと ADR",
+    question: "現在の構成を各軸で説明し、見直し条件まで残せるか",
   },
 ]
 
