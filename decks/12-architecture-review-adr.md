@@ -79,15 +79,22 @@ title: "第12回: 実プロダクト設計レビューとADR"
 | Transport | Function、HTTP、Queue、Broker のどれで運ぶか |
 | Message semantics | Command か Event か |
 | Delivery semantics | at-most-once / at-least-once をどう扱うか |
-| デプロイ境界 | 同一プロセス、別プロセス、別サービスのどこで分けるか |
+| 実行境界 | 同一プロセスか、別プロセスか |
+| デプロイ境界 | 同時リリースか、独立リリースか |
+| データ所有境界 | 誰が書き込み責任を持つか |
+| サービス境界 | 独立した契約と運用責任を持つか |
+| チーム所有境界 | 誰が変更、運用するか |
 
 Repository 内部で Mapper を使う、Use Case が transaction 境界を決めて Transaction Runner で実行する、Command Message を Queue で配送する、という組み合わせは成立する。
+すべての軸について設計判断を作る必要はない。
+Driver と問題に関係する軸だけを選び、判断する。
 
 <!--
 話すこと:
 - ここは選択肢表ではなく、確認する問いの一覧として扱う。
 - 共存するものを排他的な選択肢として扱わない。
 - 最終回では「どの軸の話か」を分けられるかを見る。
+- 表を全部埋めることが目的ではない。Driverに関係しない軸は「今回は対象外」としてよい。
 -->
 ---
 
@@ -149,8 +156,17 @@ Port を作る基準、例外
 Drivers:
 要求、品質特性、制約
 
+Priority:
+どのDriverを最優先するか
+
+Evidence / Measure:
+何をもって満たしたと判断するか
+
+Relevant axes:
+今回関係する設計軸だけ選ぶ
+
 Current design:
-現在の依存、データ、transaction、外部I/O
+選んだ軸について、現在の依存、データ、transaction、外部I/O
 
 Security:
 誰が操作できるか、他テナントのデータへ触れないか、機密情報を外部へ送らないか、監査対象か
@@ -159,7 +175,7 @@ Problems:
 どの変更や障害が難しいか
 
 Alternatives:
-最低2案
+対象軸について最低2案
 
 Decision:
 どの案を選ぶか

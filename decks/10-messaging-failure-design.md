@@ -85,7 +85,7 @@ Event は過去に起きた事実。
 -->
 ---
 
-## GoF Command との違い
+## 補足: GoF Command との違い
 
 ```ts
 type InMemoryCommand = () => Promise<void>
@@ -155,16 +155,25 @@ Queue や Broker で非同期配送にすると、時間的な関係が変わる
 
 - 重複配信
 - 順序保証
-- Retry: 一時的失敗に対して再実行する
+- Retry: 再実行しても安全な処理を、条件付きで再実行する
 - Dead Letter Queue: 処理できない message を退避する場所
 - イベントスキーマの互換性
 - 「配信済み」と「処理済み」の違い
-- eventual consistency: すぐには一致しないが、後で整合する前提の一貫性
+- eventual consistency: 一時的な不一致を許容し、配送・再試行・修復などの仕組みにより、最終的な収束を目指す整合性モデル
 
 重複して届いても壊れない処理を、冪等という。
 
-Retry してよいのは、timeout などの一時的失敗。
-入力不正や権限エラーのような恒久的失敗は、再試行しても成功しない。
+Retry できるのは、再実行しても安全な処理、または Idempotency Key などで重複を抑制できる処理に限る。
+timeout は処理結果が不明な場合があるため、無条件に Retry しない。
+
+| 失敗 | 例 | 方針 |
+|---|---|---|
+| 一時的で未実行と判断できる | 接続確立前の失敗、明示的な 503 | Backoff して Retry を検討 |
+| 結果不明 | timeout、接続切断 | 状態照会、Idempotency Key が必要 |
+| 恒久的 | 入力不正、権限不足 | Retry しない |
+
+eventual consistency は放置してよいという意味ではない。
+未処理状態を観測し、修復できる必要がある。
 
 <!--
 話すこと:
@@ -300,6 +309,10 @@ Trade-offs:
 
 非同期にする理由は「先進的だから」ではない。
 失敗時に再試行でき、画面応答と切り離せるから。
+Command Message は発行側が「メールを送る」という後続処理を知る。
+Event は発行側が「請求書が発行された」という事実だけを出し、通知側が反応を選ぶ。
+Command は宛先と目的が明確だが、発行側が通知要求を知る。
+Event は購読者を直接知らないが、イベント契約と eventual consistency のコストが増える。
 冪等性キーの例は、`messageId`、`(invoiceId, notificationType)` の unique constraint、メールプロバイダーの idempotency key、配信状態テーブルなど。
 ただし、外部APIが冪等性キーを持たない場合、processed-message だけで重複メールを完全には防げない。
 重複メールが重大なら、プロバイダーや送信方式の変更も検討する。

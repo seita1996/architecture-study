@@ -103,6 +103,9 @@ one deployable application
 Contract Service -> Invoice Service -> Payment Service
 ```
 
+一つのチームが複数サービスを所有することもある。
+重要なのは、サービスごとの変更・運用責任が明確で、他チームとの常時調整なしにリリースできるか。
+
 この図は、Entity 名で分けた初期仮説にすぎない。
 「契約」「請求書」「支払い」という名詞があるから、そのままサービスにするとは限らない。
 

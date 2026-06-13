@@ -148,8 +148,10 @@ type Invoice =
   | { id: string; status: "paid"; paidAt: Date }
   | { id: string; status: "cancelled"; cancelledAt: Date }
 
+type CancelledInvoice = Extract<Invoice, { status: "cancelled" }>
+
 type CancelInvoiceDecision =
-  | { type: "cancelled"; invoice: Invoice }
+  | { type: "cancelled"; invoice: CancelledInvoice }
   | { type: "cannot_cancel"; currentStatus: Invoice["status"] }
 
 const cancelInvoice = (
@@ -429,7 +431,7 @@ Trade-offs:
 - キャンセル期限がある
 - 一部返金がある
 - キャンセル理由の種類で後続処理が変わる
-- 監査イベントを必ず残す
+- キャンセル後の状態や理由に応じて、複数の処理が同じ判定を使う
 
 「Domain Model が上等」ではなく、ルールの密度に見合うかを見る。
 

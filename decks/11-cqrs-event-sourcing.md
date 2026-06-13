@@ -102,10 +102,14 @@ Read:
 - index、cache、read replica、query 改善、materialized view で足りる
 - モデル同期の運用コストを払えない
 
+画面用の DTO や専用 Query を一つ作っただけで CQRS になるわけではない。
+読み書きで異なるモデルと責務を意図的に分離し、その同期や運用を設計するときに CQRS として扱う。
+
 <!--
 話すこと:
 - 読み取りが多いだけではCQRSの理由として弱い。まず index、cache、read replica、query 改善、materialized view を比較する。
 - モデルを分けると同期、再構築、障害時の調査が増える。
+- 第6回の「一覧はQueryで直接読む」と、CQRSとして読み書きモデルを分ける話を混同しない。
 -->
 ---
 
