@@ -332,13 +332,16 @@ Related Decisions:
   ADR: 請求書発行コードをユースケース単位に配置する。
 
 Follow-up Decisions:
-  後続処理をTransactional Job Queueにするか、Outbox Relay + Brokerにするか。
-  メール通知をCommand Messageにするか、InvoiceIssued Eventにするか。
+  ADR-013 または Issue #123:
+    後続処理をTransactional Job Queueにするか、Outbox Relay + Brokerにするか。
+  ADR-014 または Issue #124:
+    メール通知をCommand Messageにするか、InvoiceIssued Eventにするか。
 ```
 
 <!--
 話すこと:
 - Review 条件まで書くことが重要。将来の自分たちが見直せる。
+- Follow-up Decision は別ADRまたはIssueへリンクする。Owner、期限、Statusを持たせると放置されにくい。
 -->
 ---
 
@@ -391,7 +394,7 @@ N/Aは点数計算から除外する。
 合計点は参考値。
 常に評価する項目に0点がないか、問題に関係する項目をN/Aにした理由が妥当か、前後比較でどの観点が伸びたかを重視する。
 前後比較では、常に評価する項目を中心に見て、問題依存項目は定性的に比較する。
-ただし、Failure mode、整合性、品質特性に関わる重大な見落としがある場合は、点数だけで合格にしない。
+ただし、Failure mode、整合性、品質特性に関わる重大な見落としがある場合は、点数だけで到達度を判断しない。
 性能、可用性、運用性、セキュリティは、この勉強会だけで解決能力までは評価せず、追加計測や専門レビューが必要な論点として識別できるかを見る。
 
 <!--
