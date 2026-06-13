@@ -380,14 +380,17 @@ type InvoiceRow = {
   id: string
   status: "draft" | "issued"
 }
+type InvoiceUpdateData = {
+  status: "issued"
+}
 export type PrismaClient = {
   invoice: {
     findUnique: (args: { where: { id: InvoiceId } }) => Promise<InvoiceRow | null>
-    update: (args: { where: { id: InvoiceId }; data: InvoiceRow }) => Promise<void>
+    update: (args: { where: { id: InvoiceId }; data: InvoiceUpdateData }) => Promise<void>
   }
 }
 declare const toInvoice: (row: InvoiceRow) => Invoice
-declare const toInvoiceRow: (invoice: IssuedInvoice) => InvoiceRow
+declare const toInvoiceUpdateData: (invoice: IssuedInvoice) => InvoiceUpdateData
 
 export const createPrismaIssueInvoicePersistence =
   (prisma: PrismaClient): IssueInvoicePersistence => ({
@@ -398,7 +401,7 @@ export const createPrismaIssueInvoicePersistence =
     saveIssuedInvoice: async (invoice) => {
       await prisma.invoice.update({
         where: { id: invoice.id },
-        data: toInvoiceRow(invoice),
+        data: toInvoiceUpdateData(invoice),
       })
     },
   })
