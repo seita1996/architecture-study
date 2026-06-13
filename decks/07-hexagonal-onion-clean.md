@@ -303,6 +303,7 @@ import { issueDraftInvoice } from "./invoice"
 
 export const createIssueInvoice = (deps: {
   persistence: IssueInvoicePersistence
+  clock: { now: () => Date }
 }): IssueInvoice => async (input) => {
   const invoice = await deps.persistence.loadInvoice(input.invoiceId)
   if (!invoice) return { type: "not_found" }
@@ -310,7 +311,7 @@ export const createIssueInvoice = (deps: {
     return { type: "cannot_issue", currentStatus: invoice.status }
   }
 
-  const issued = issueDraftInvoice(invoice)
+  const issued = issueDraftInvoice(invoice, deps.clock.now())
   await deps.persistence.saveIssuedInvoice(issued)
   return { type: "issued", invoice: issued }
 }
@@ -324,11 +325,16 @@ export type DraftInvoice = {
 export type IssuedInvoice = {
   id: InvoiceId
   status: "issued"
+  issuedAt: Date
 }
 export type Invoice = DraftInvoice | IssuedInvoice
-export const issueDraftInvoice = (invoice: DraftInvoice): IssuedInvoice => ({
+export const issueDraftInvoice = (
+  invoice: DraftInvoice,
+  now: Date,
+): IssuedInvoice => ({
   ...invoice,
   status: "issued",
+  issuedAt: now,
 })
 
 // ports.ts
@@ -383,9 +389,11 @@ import type { InvoiceId, Invoice, IssuedInvoice } from "./invoice"
 type InvoiceRow = {
   id: string
   status: "draft" | "issued"
+  issued_at: Date | null
 }
 type InvoiceUpdateData = {
   status: "issued"
+  issued_at: Date
 }
 export type PrismaClient = {
   invoice: {
@@ -419,8 +427,10 @@ import {
 } from "./features/issue-invoice/prisma-issue-invoice-persistence"
 
 declare const prisma: PrismaClient
+const systemClock = { now: () => new Date() }
 const issueInvoiceUseCase = createIssueInvoice({
   persistence: createPrismaIssueInvoicePersistence(prisma),
+  clock: systemClock,
 })
 const invoiceRoute = createInvoiceRoute(issueInvoiceUseCase)
 ```
