@@ -279,6 +279,13 @@ main.ts
 ```ts
 // routes/invoice-route.ts
 import type { IssueInvoice } from "../features/issue-invoice/issue-invoice-port"
+export const createInvoiceRoute =
+  (issueInvoice: IssueInvoice) =>
+  async (request: Request): Promise<Response> => {
+    const input = await parseIssueInvoiceRequest(request)
+    const result = await issueInvoice(input)
+    return toHttpResponse(result)
+  }
 
 // issue-invoice.ts
 import type { InvoiceRepository } from "./ports"
@@ -287,6 +294,16 @@ export const createIssueInvoice = (deps: {
 }): IssueInvoice => async (input) => {
   // deps.invoices を使ってユースケースを進める
 }
+
+// invoice.ts
+export type Invoice = {
+  id: InvoiceId
+  status: "draft" | "issued"
+}
+export const issueInvoice = (invoice: Invoice): Invoice => ({
+  ...invoice,
+  status: "issued",
+})
 
 // prisma-invoice-repository.ts
 import type { InvoiceRepository } from "./ports"
@@ -333,7 +350,8 @@ Unknowns:
 
 ## 答え合わせ: 技術の入口と業務の中心を分ける
 
-分類例はこうなる。
+提示された情報からは、次のように分類できる。
+最終的には実装と import 方向を確認する。
 
 | ファイル | 役割 |
 |---|---|

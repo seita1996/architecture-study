@@ -79,7 +79,8 @@ title: "第12回: 実プロダクト設計レビューとADR"
 | 変更追跡 | 明示保存か、Change Tracking を利用するか |
 | 応答方式 | 呼び出し元が最終処理完了を待つか |
 | 実行配置 | 同一プロセスか、別プロセスか |
-| 通信方式 | HTTP/RPCか、Messagingか |
+| 呼び出し方式 | 直接関数呼び出しか、メッセージ経由か |
+| ネットワーク通信 | HTTP/RPCか、Messagingか |
 | 配信形態 | Point-to-pointか、Publish-subscribeか |
 | インフラ | どの Broker / Queue service を使うか |
 | Message semantics | Command か Event か |
@@ -232,7 +233,7 @@ ADR は、その中の重要な一つの判断を記録するもの。
 | 業務ロジック | Transaction Script / Domain Model のどちらが複雑さに合うか |
 | 永続化 | Write側永続化、Read側取得、Read側モデル、Mapper を混同していないか |
 | 一貫性 | transaction、unique constraint、冪等性が必要か |
-| メッセージング | Message semantics、応答方式、通信方式、配信形態を混同していないか |
+| メッセージング | Message semantics、応答方式、呼び出し方式、ネットワーク通信、配信形態を混同していないか |
 | 読み書き | CQRS が必要なほどモデルやスケールが違うか |
 | セキュリティ | 自力で解決しきれない論点を専門レビューへ渡せるか |
 
@@ -249,22 +250,42 @@ ADR は、その中の重要な一つの判断を記録するもの。
 ## 参考: ADR 例
 
 ```txt
+Status:
+  Accepted
+
+Date:
+  2026-XX-XX
+
+Owners:
+  Invoice team
+
 Decision:
-  メール送信は Outbox 経由の Command Message にする。
+  請求書発行後のメール送信は Outbox 経由の Command Message にする。
 
 Context:
   メールAPIは一社固定だがタイムアウトが多い。
   監査ログは請求書更新と一緒に必ず残す必要がある。
 
-Reason:
+Reason / Rationale:
   DB更新と「メールを送るべき」という意図を同じtransactionで残したい。
   メール送信自体は遅れてもよく、失敗時に再試行したい。
 
-Trade-offs:
+Consequences / Trade-offs:
   Outbox worker、再送監視、冪等Handlerが必要になる。
+
+Decision Rules / Constraints:
+  請求書保存とOutbox message保存は同じDB transactionに含める。
+  外部メールAPI呼び出しはDB transaction内で行わない。
 
 Review Conditions:
   メール送信が同期応答に必須になったら、状態管理と補償を再検討する。
+
+Rejected Options:
+  同期メール送信: メールAPI障害が請求書発行の可用性へ直結する。
+  DB commit後の直接publish: DB更新成功後に通知要求を失う可能性がある。
+
+Related Decisions:
+  ADR: 請求書発行コードをユースケース単位に配置する。
 ```
 
 <!--

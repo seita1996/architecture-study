@@ -410,7 +410,8 @@ type DocumentFile = {
   content: Uint8Array
 }
 
-type S3Sdk = {
+// 説明用に簡略化したSDK型
+type S3LikeClient = {
   putObject: (input: {
     bucket: string
     key: string
@@ -420,7 +421,7 @@ type S3Sdk = {
 
 const uploadDocument = async (
   file: DocumentFile,
-  s3: S3Sdk,
+  s3: S3LikeClient,
 ): Promise<void> => {
   await s3.putObject({
     bucket: "documents",
@@ -438,7 +439,19 @@ const uploadDocument = async (
 - Bucket、Key、権限設定をユースケースへ漏らしたいか
 - ドキュメント保存という業務上の会話を表現できているか
 
-改善案:
+<!--
+話すこと:
+- ここではまだ改善案を出さない。まず各自で境界を作る理由があるかを書いてもらう。
+- 確認したい観点: 差し替えだけでなく、失敗型、設定、業務語彙を境界で扱えているか。
+- 典型的な誤答: Fakeに差し替えたいから常にStorageを作る、またはSDKを直接使ってもテストできれば十分とする。
+- 最低限出てほしい問い: S3の失敗や権限設定はユースケースの言葉か、ドキュメント保存の契約は何を返すべきか。
+- 追加情報があれば判断が変わる点: 保存先が本当に複数あるか、S3固有機能を業務要件として使うか、失敗時の再試行方針。
+-->
+---
+
+## 転移問題の整理: S3境界
+
+改善案の一つ:
 
 ```ts
 type DocumentStore = {
@@ -447,19 +460,22 @@ type DocumentStore = {
   ) => Promise<
     | { type: "saved"; documentId: string }
     | { type: "temporarily_unavailable" }
-    | { type: "rejected"; reason: string }
+    | {
+        type: "rejected"
+        reason: "unsupported_type" | "too_large"
+      }
   >
 }
 ```
+
+ただし、`DocumentStore` が唯一の答えではない。
+S3固有機能が業務要件へ強く入るなら、その能力を明示した境界にする場合もある。
 
 <!--
 話すこと:
 - 請求書以外でも、具体実装へ直接依存してよいかを同じ問いで見られることを確認する。
 - 抽象の名前を技術名ではなく、ユースケース側の言葉に寄せるかを見る。
-- 確認したい観点: 差し替えだけでなく、失敗型、設定、業務語彙を境界で扱えているか。
-- 典型的な誤答: Fakeに差し替えたいから常にStorageを作る、またはSDKを直接使ってもテストできれば十分とする。
-- 最低限出てほしい問い: S3の失敗や権限設定はユースケースの言葉か、ドキュメント保存の契約は何を返すべきか。
-- 追加情報があれば判断が変わる点: 保存先が本当に複数あるか、S3固有機能を業務要件として使うか、失敗時の再試行方針。
+- `Storage` は技術語寄り、`DocumentStore` は業務語寄り。どちらが安定した言葉かは要求次第。
 -->
 ---
 

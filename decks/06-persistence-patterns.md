@@ -183,6 +183,18 @@ DB モデルとドメインオブジェクトを分離する。
 Data Mapper は、ドメインオブジェクトとDBを互いに独立させ、両者の間でデータを移動する層。
 
 ```ts
+type Currency = "JPY" | "USD"
+
+type Money = {
+  amountInMinorUnits: number
+  currency: Currency
+}
+
+type InvoiceRow = {
+  amount_in_minor_units: number
+  currency_code: string
+}
+
 type InvoiceRowMapper = {
   toDomain: (row: InvoiceRow) => Invoice
   toRow: (invoice: Invoice) => InvoiceRow
@@ -195,7 +207,7 @@ type InvoiceDataMapper = {
 }
 ```
 
-DB では `amount: number`、業務上は `Money` のように形が違う場合、変換責務が明確になる。
+DB では `amount_in_minor_units` と `currency_code`、業務上は `Money` のように形が違う場合、変換責務が明確になる。
 Aggregate は、同一の不変条件を守るために一貫して扱うまとまり。
 
 <!--
@@ -512,6 +524,18 @@ Request B: reservation を作成
 - キャンセル後に再予約できるなら、どの状態だけを一意にするか
 - retryされた同じ予約要求をどう冪等にするか
 
+<!--
+話すこと:
+- ここでは表を見せず、各自で一意性のスコープと冪等性を分けて書いてもらう。
+- 確認したい観点: 座席の一意性と、同じ要求の再送は別のFailure mode。
+- 典型的な誤答: `seatId` だけをuniqueにする、またはidempotency keyだけで座席競合も防げると考える。
+- 最低限出てほしい問い: 座席は何に対して一意か、キャンセル済み予約をどう扱うか、再送をどう識別するか。
+- 追加情報があれば判断が変わる点: フライト、上映、イベントなどの予約単位、キャンセル後の再販可否、DBの部分unique制約対応。
+-->
+---
+
+## 転移問題の整理: 座席予約
+
 | 保証したいこと | 仕組み |
 |---|---|
 | 異なる要求が同じ座席を取らない | `flightId + seatId` など、座席割当に対する一意制約 |
@@ -521,10 +545,7 @@ Request B: reservation を作成
 <!--
 話すこと:
 - 問題構造は二重発行と同じ。永続化境界と整合性保証を分けて見る。
-- 確認したい観点: 座席の一意性と、同じ要求の再送は別のFailure mode。
-- 典型的な誤答: `seatId` だけをuniqueにする、またはidempotency keyだけで座席競合も防げると考える。
-- 最低限出てほしい問い: 座席は何に対して一意か、キャンセル済み予約をどう扱うか、再送をどう識別するか。
-- 追加情報があれば判断が変わる点: フライト、上映、イベントなどの予約単位、キャンセル後の再販可否、DBの部分unique制約対応。
+- Repositoryではなく、DB制約、transaction、idempotencyを組み合わせて守る。
 -->
 ---
 

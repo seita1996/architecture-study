@@ -112,7 +112,7 @@ architecture-study/
 | 0 | 30分または事前資料 | 前提知識の補習。理解度により可変 |
 | 1 | 60分 | Driver、設計軸、分類地図を扱う |
 | 2 | 30〜40分 | 凝集・結合に集中できる |
-| 3 | 45分 | DIP、LSP、ISP、抽象の評価 |
+| 3 | 50〜60分 | DIP、LSP、ISP、抽象の評価、転移問題 |
 | 4 | 30〜40分 | Layer、Tier、配置の区別 |
 | 5 | 60分 | Transaction Script、Domain Model、Application Service |
 | 6 | 60〜75分 | Mapper、Repository、Query、整合性、補足パターン |

@@ -164,11 +164,23 @@ type InvoiceBase = {
 }
 
 type Currency = "JPY" | "USD"
+type Result<T, E> =
+  | { type: "ok"; value: T }
+  | { type: "error"; error: E }
+type InvalidMoney =
+  | "not_integer"
+  | "out_of_range"
+  | "unsupported_currency"
 
 type Money = {
   amountInMinorUnits: number
   currency: Currency
 }
+
+declare const createMoney: (
+  amountInMinorUnits: number,
+  currency: Currency,
+) => Result<Money, InvalidMoney>
 
 type Invoice =
   | InvoiceBase & { status: "draft" }
@@ -205,6 +217,8 @@ const cancelInvoice = (
 }
 ```
 
+実際には factory で整数、範囲、通貨を検証する。
+この例では `Money` の構造だけを示している。
 状態、業務上の型、不変条件、状態遷移を近くに置く。
 純粋関数に切り出すだけで Domain Model になるわけではない。
 
@@ -400,11 +414,23 @@ type InvoiceBase = {
 }
 
 type Currency = "JPY" | "USD"
+type Result<T, E> =
+  | { type: "ok"; value: T }
+  | { type: "error"; error: E }
+type InvalidMoney =
+  | "not_integer"
+  | "out_of_range"
+  | "unsupported_currency"
 
 type Money = {
   amountInMinorUnits: number
   currency: Currency
 }
+
+declare const createMoney: (
+  amountInMinorUnits: number,
+  currency: Currency,
+) => Result<Money, InvalidMoney>
 
 type Invoice =
   | InvoiceBase & { status: "draft" }
