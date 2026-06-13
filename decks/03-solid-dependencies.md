@@ -158,29 +158,29 @@ Prisma の API と DB モデルがユースケースに見える。
 ## 抽象への依存
 
 ```ts
-type InvoiceRepository = {
-  findIssuedByContract: (contractId: string) => Promise<Invoice | null>
-  save: (invoice: Invoice) => Promise<void>
+type LoadContract = (contractId: string) => Promise<Contract | null>
+type SaveInvoice = (invoice: Invoice) => Promise<void>
+
+type CreateInvoiceDependencies = {
+  loadContract: LoadContract
+  saveInvoice: SaveInvoice
 }
 
 const createInvoice =
-  (invoices: InvoiceRepository): CreateInvoice =>
+  (deps: CreateInvoiceDependencies): CreateInvoice =>
   async (input) => {
-    const issued = await invoices.findIssuedByContract(input.contractId)
-    if (issued) return { type: "already_issued" }
+    const contract = await deps.loadContract(input.contractId)
+    if (!contract) return { type: "contract_not_found" }
 
-    const invoice = issueInvoice(input)
-    await invoices.save(invoice)
+    const invoice = issueInvoice(contract, input)
+    await deps.saveInvoice(invoice)
     return { type: "issued", invoiceId: invoice.id }
   }
 ```
 
 抽象がユースケースの言葉になっている場合、境界として意味を持つ。
 
-ただし、このコードには並行実行の問題が残る。
-2つのリクエストが同時に「まだ発行されていない」と読めば、二重発行が起きる可能性がある。
-
-Repository を作っても整合性は自動では保証されない。
+ただし、抽象を作っても整合性は自動では保証されない。
 業務上の一意性には DB の unique constraint、transaction、競合処理、冪等性キーなどが必要になる。
 
 <!--
@@ -247,14 +247,16 @@ type InvoiceDependencies = {
   deleteInvoice: (invoiceId: string) => Promise<void>
 }
 
+declare const markInvoiceCancelled: (invoice: Invoice) => Invoice
+
 const cancelInvoice =
   (deps: InvoiceDependencies) =>
   async (invoiceId: string): Promise<CancelInvoiceResult> => {
     const invoice = await deps.findInvoice(invoiceId)
     if (!invoice) return { type: "not_found" }
-    // cancel
-    const cancelled = { ...invoice, status: "cancelled" as const }
-    await deps.saveInvoice(cancelled)
+    // 状態遷移の詳細は第5回で扱う
+    const cancelledInvoice = markInvoiceCancelled(invoice)
+    await deps.saveInvoice(cancelledInvoice)
     return { type: "cancelled" }
   }
 ```
@@ -278,14 +280,16 @@ type CancelInvoiceDependencies = {
   saveInvoice: (invoice: Invoice) => Promise<void>
 }
 
+declare const markInvoiceCancelled: (invoice: Invoice) => Invoice
+
 const cancelInvoice =
   (deps: CancelInvoiceDependencies) =>
   async (invoiceId: string): Promise<CancelInvoiceResult> => {
     const invoice = await deps.findInvoice(invoiceId)
     if (!invoice) return { type: "not_found" }
-    // cancel
-    const cancelled = { ...invoice, status: "cancelled" as const }
-    await deps.saveInvoice(cancelled)
+    // 状態遷移の詳細は第5回で扱う
+    const cancelledInvoice = markInvoiceCancelled(invoice)
+    await deps.saveInvoice(cancelledInvoice)
     return { type: "cancelled" }
   }
 ```

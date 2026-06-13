@@ -63,28 +63,31 @@ title: "第12回: 実プロダクト設計レビューとADR"
 
 ## 設計軸レビュー
 
-| 軸 | 記録すること |
+| 観点 | 確認する問い |
 |---|---|
-| コード配置 | Package by Layer / Feature / Vertical Slice |
-| 依存境界 | Direct Dependency / Ports and Adapters |
-| 業務ロジック | Transaction Script / Domain Model |
-| 業務処理からのDBアクセス | ORM直接 / Query Object / Repository |
-| DB行と業務型の変換 | 同一モデル / Mapper |
-| transaction境界 | Use Case内 / Transaction Runner / Framework管理 |
-| 変更追跡 | 明示保存 / ORM Change Tracking / Unit of Work |
-| 応答方式 | Sync / Async |
-| Transport | Function / HTTP / Queue / Broker |
-| Message semantics | Command / Event |
-| Delivery semantics | at-most-once / at-least-once |
-| デプロイ | Monolith / Modular Monolith / Microservices |
+| コード配置 | 技術責務、機能、ユースケースのどれに近づけるか |
+| 変更境界 | end-to-end な Slice として独立させるか |
+| 依存境界 | 外部技術や失敗契約をどこで変換するか |
+| 業務ロジック | Transaction Script / Domain Model のどちらが複雑さに合うか |
+| Write側永続化 | ORM直接か、Repository境界を置くか |
+| Read側アクセス | ORM直接、Query Object、Read Model のどれを使うか |
+| Mapper | DB型と業務型を分けるか |
+| transactionの所有者 | Use Case、request、framework のどこが境界を決めるか |
+| transactionの実装 | ORM API、Transaction Runner、宣言的管理のどれを使うか |
+| 変更追跡 | 明示保存か、Change Tracking を利用するか |
+| 応答方式 | 呼び出し元が最終処理完了を待つか |
+| Transport | Function、HTTP、Queue、Broker のどれで運ぶか |
+| Message semantics | Command か Event か |
+| Delivery semantics | at-most-once / at-least-once をどう扱うか |
+| デプロイ境界 | 同一プロセス、別プロセス、別サービスのどこで分けるか |
 
-Repository 内部で Mapper を使う、Unit of Work が transaction を管理する、Command Message を Queue で配送する、という組み合わせは成立する。
+Repository 内部で Mapper を使う、Use Case が transaction 境界を決めて Transaction Runner で実行する、Command Message を Queue で配送する、という組み合わせは成立する。
 
 <!--
 話すこと:
-- 前回指摘された非直交な表をここで解消する。
-- 一つの列から選ぶのではなく、各軸で判断する。
+- ここは選択肢表ではなく、確認する問いの一覧として扱う。
 - 共存するものを排他的な選択肢として扱わない。
+- 最終回では「どの軸の話か」を分けられるかを見る。
 -->
 ---
 
@@ -115,7 +118,10 @@ YYYY-MM-DD
 良い結果と悪い結果。増える実装量、学習コスト、運用コスト
 
 ## Rules
-Port を作る基準、例外、見直し条件
+Port を作る基準、例外
+
+## Review Conditions
+どの条件で再検討するか
 
 ## Rejected Options
 なぜ選ばないか
@@ -164,7 +170,7 @@ Trade-offs:
 Unknowns:
 追加調査が必要なこと
 
-Review condition:
+Review Conditions:
 どの条件で見直すか
 ```
 
@@ -208,7 +214,7 @@ ADR は、その中の重要な一つの判断を記録するもの。
 | 一貫性 | transaction、unique constraint、冪等性が必要か |
 | メッセージング | Command / Event、Sync / Async、Queue / Broker を混同していないか |
 | 読み書き | CQRS が必要なほどモデルやスケールが違うか |
-| セキュリティ | 権限、テナント境界、機密情報、監査対象を確認したか |
+| セキュリティ | 自力で解決しきれない論点を専門レビューへ渡せるか |
 
 これは「Vertical Slice + Hexagonal だから正しい」ではない。
 各軸で必要なトレードオフだけ選ぶ。
@@ -237,7 +243,7 @@ Reason:
 Trade-offs:
   Outbox worker、再送監視、冪等Handlerが必要になる。
 
-Review:
+Review Conditions:
   メール送信が同期応答に必須になったら、状態管理と補償を再検討する。
 ```
 
@@ -266,13 +272,14 @@ Review:
 | 代替案 | 最低2案を出せる |
 | Trade-off | 利点とコストを両方説明できる |
 | Failure mode | 並行実行、部分失敗、再試行を考慮できる |
-| Security | 権限、テナント境界、機密情報、監査を確認できる |
+| Security | 権限、テナント境界、機密情報、監査など、専門レビューが必要な論点を検出できる |
 | 判断 | 制約に基づいて一案を選べる |
 | 不確実性 | 足りない情報を言える |
 | 見直し条件 | 将来の再判断条件を残せる |
 
 16点以上は目安。
-ただし、Failure mode やセキュリティ・整合性に関わる重大な見落としがある場合は、点数だけで合格にしない。
+ただし、Failure mode や整合性に関わる重大な見落としがある場合は、点数だけで合格にしない。
+セキュリティはこの勉強会だけで解決能力までは評価せず、専門レビューが必要な論点として識別できるかを見る。
 
 <!--
 話すこと:
@@ -303,7 +310,7 @@ Review:
 ## 中心メッセージ
 
 <div class="study-note">
-パターンは解決策ではなく、特定の制約と問題に対する、名前の付いたトレードオフである。
+パターンは万能な正解ではない。特定の文脈で繰り返し現れる問題に対する、名前の付いた解決構造であり、利点とコストを伴う。
 </div>
 
 <!--

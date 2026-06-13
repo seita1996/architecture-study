@@ -222,6 +222,9 @@ export const createStripePaymentGateway =
 
       return { type: "charged", providerId: result.id }
     } catch (error) {
+      if (!isExpectedStripeError(error)) {
+        throw error
+      }
       return mapStripeError(error)
     }
   }
@@ -229,12 +232,14 @@ export const createStripePaymentGateway =
 
 ユースケースは Stripe ではなく、支払いという出力ポートに依存する。
 Stripe の例外やエラーコードは Adapter の中で、アプリケーションの失敗型へ変換する。
+プログラミングエラーまで業務エラーに変換しないよう、期待した外部エラーだけを変換する。
 
 <!--
 話すこと:
 - コード例は文法の細部より、依存の向き、責務の置き場所、変更時に触る範囲を見る。
 - TypeScript では type と const 関数を使った表現でも、設計上の境界や契約を表せることを確認する。
 - 境界の価値は差し替えだけではない。外部サービスの失敗表現をアプリケーションの言葉へ変換することも重要。
+- 金額の最小通貨単位、通貨ごとの桁、丸めなども Adapter で外部APIの形式へ変換する候補になる。
 - この形を必ず採用するという話ではなく、何を隠し、何を明示しているかを読む。
 -->
 ---

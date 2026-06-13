@@ -30,13 +30,16 @@ Command / Event、同期 / 非同期、Retry、Outbox を分けて考える
 今日のゴール:
 
 - Command と Event の意味を区別できる
-- 同期 / 非同期、Point-to-point / Publish-subscribe を分けられる
-- 冪等性、Retry、DLQ の必要性を説明できる
+- 同期 / 非同期を分けられる
 - Outbox が解く失敗シナリオを説明できる
+- at-least-once と冪等性の関係を説明できる
+
+30分版では、Point-to-point / Publish-subscribe、DLQ、exactly-once、Inbox、外部副作用の厳密な限界は補足として扱う。
 
 <!--
 話すこと:
 - 用語一覧で終わらせず、請求書発行とメール送信の失敗を題材にする。
+- 30分版の主役は Command/Event、Sync/Async、Outbox、at-least-once、冪等性に絞る。
 -->
 ---
 
@@ -291,16 +294,21 @@ Trade-offs:
 | 監査ログ | 同じ DB なら同一 transaction |
 | メール送信 | Outbox + Queue |
 | メッセージ | `SendInvoiceEmail` Command Message |
-| Handler | `messageId` または業務上の冪等性キーで処理済みを記録する |
+| DB内の重複処理 | Inbox / processed-message と業務更新を同一 transaction で扱う |
+| 外部API冪等性 | プロバイダーが Idempotency Key を持つなら、`invoiceId + notificationType` などの業務キーを渡す |
+| Idempotency Key がない場合 | 送信状態、再送ポリシー、重複許容性を設計する |
 
 非同期にする理由は「先進的だから」ではない。
 失敗時に再試行でき、画面応答と切り離せるから。
 冪等性キーの例は、`messageId`、`(invoiceId, notificationType)` の unique constraint、メールプロバイダーの idempotency key、配信状態テーブルなど。
+ただし、外部APIが冪等性キーを持たない場合、processed-message だけで重複メールを完全には防げない。
+重複メールが重大なら、プロバイダーや送信方式の変更も検討する。
 
 <!--
 話すこと:
 - Event にする案もあり得るが、メールを送る明確な作業なら Command Message が分かりやすい。
 - 複数の購読者が独立反応するなら Event を検討する。
+- DLQ は単なる置き場ではない。監視、原因分類、修正後の再投入、毒メッセージの隔離まで設計しないと、失敗が見えない墓場になる。
 -->
 ---
 
