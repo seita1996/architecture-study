@@ -9,6 +9,11 @@ const distDir = resolve(root, "decks/dist")
 
 const decks = [
   {
+    href: "./00-prerequisites/",
+    title: "第0回: 受講前提と基礎用語",
+    question: "TypeScript、HTTP、DB、非同期処理、テストの前提は揃っているか",
+  },
+  {
     href: "./01-architecture-map/",
     title: "第1回: アーキテクチャは何を決めるのか",
     question: "品質特性、要求、制約、設計軸をどう結びつけるか",
@@ -180,7 +185,7 @@ const createIndexHtml = () => `<!doctype html>
   <body>
     <main>
       <h1>Architecture Study</h1>
-      <p class="lead">主要な設計パターンを比較し、状況に応じて選択できるようになるための全12回の Slidev 資料です。</p>
+      <p class="lead">主要な設計パターンを比較し、状況に応じて選択できるようになるための第0回と本編12回の Slidev 資料です。</p>
       <ol class="deck-list">
         ${decks
           .map(

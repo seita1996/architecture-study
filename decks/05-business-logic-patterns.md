@@ -80,7 +80,7 @@ title: "第5回: アプリケーション境界と処理フロー"
 
 <!--
 話すこと:
-- ここでは前提の言葉をゆっくり揃える。専門用語は、正確さよりも会話で同じものを指せることを優先する。
+- ここでは前提の言葉をゆっくり揃える。最初は直感的な説明から入る。ただし、正式な定義との差と、この回で省略している範囲を明示する。
 - 似た言葉が出ても、粒度が違う話なのか、目的が違う話なのかを見分ける姿勢を強調する。
 - 分からない言葉があれば、この場で止めて確認してよいと伝える。
 -->
@@ -142,34 +142,42 @@ Transaction Script は、処理の流れをそのまま書く。
 ## Domain Model
 
 ```ts
-type Invoice = {
-  id: string
-  status: "draft" | "issued" | "paid" | "cancelled"
-}
+type Invoice =
+  | { id: string; status: "draft" }
+  | { id: string; status: "issued"; issuedAt: Date }
+  | { id: string; status: "paid"; paidAt: Date }
+  | { id: string; status: "cancelled"; cancelledAt: Date }
 
 type CancelInvoiceResult =
   | { type: "cancelled"; invoice: Invoice }
-  | { type: "cannot_cancel_paid_invoice" }
+  | { type: "cannot_cancel"; currentStatus: Invoice["status"] }
 
-const cancelInvoice = (invoice: Invoice): CancelInvoiceResult => {
-  if (invoice.status === "paid") {
-    return { type: "cannot_cancel_paid_invoice" }
+const cancelInvoice = (
+  invoice: Invoice,
+  now: Date,
+): CancelInvoiceResult => {
+  if (invoice.status !== "issued") {
+    return { type: "cannot_cancel", currentStatus: invoice.status }
   }
 
   return {
     type: "cancelled",
-    invoice: { ...invoice, status: "cancelled" },
+    invoice: {
+      id: invoice.id,
+      status: "cancelled",
+      cancelledAt: now,
+    },
   }
 }
 ```
 
-状態遷移や不変条件をデータ型と純粋関数に寄せる。
+状態、業務上の型、不変条件、状態遷移を近くに置く。
+純粋関数に切り出すだけで Domain Model になるわけではない。
 
 <!--
 話すこと:
-- 表は上から読むだけでなく、横に比べる。何が違うからコストや適用場面が変わるのかを見る。
-- 一つを優秀、一つを劣っていると扱わず、問題設定が変わると選択も変わると説明する。
-- 参加者には、現在のプロダクトならどの列が重要かを考えてもらう。
+- Domain Modelは、状態、不変条件、状態遷移、業務上の型、複数ユースケースからのルール再利用をまとめて考える。
+- この例では issued の請求書だけcancelできる。不完全な遷移を許さないことがポイント。
 -->
 ---
 
@@ -205,6 +213,9 @@ const cancelInvoice = (invoice: Invoice): CancelInvoiceResult => {
 | Input Port | アプリケーションが外部へ公開する操作の契約 |
 | Application Service | Input Port を実装し、ユースケースを進行する処理 |
 | Service Layer | Application Service 群によって形成されるアプリケーション境界 |
+| Entity | 同一性を持ち、状態が変わっても同じものとして扱う業務概念 |
+| Value Object | 同一性ではなく値そのもので等価性を判断する業務概念 |
+| 不変条件 | 常に守らなければならない業務ルール |
 | Domain Service | 特定の Entity や Value Object に自然に属さないドメイン判断 |
 
 完全に一つの言葉へ統一するより、どの粒度を指しているかを明確にする。
@@ -234,7 +245,7 @@ const createCancelInvoiceUseCase =
         return { type: "not_found" }
       }
 
-      const result = cancelInvoice(invoice)
+      const result = cancelInvoice(invoice, new Date())
 
       if (result.type === "cancelled") {
         await invoices.save(result.invoice)
@@ -249,6 +260,9 @@ const createCancelInvoiceUseCase =
 アプリケーションが提供する操作の入口になる。
 外部依存、トランザクション、応答の形を調整する。
 `transaction.run` の中で使う Repository は、同じ transaction に束縛されたものを受け取る。
+
+同じ DB 内の更新は local transaction に入れる。
+外部ネットワーク I/O は、長い DB transaction の中で実行しない。
 
 <!--
 話すこと:
@@ -267,10 +281,13 @@ Service Layer は、業務ルールそのものを全部置く場所ではない
 | 役割 | 例 |
 |---|---|
 | 読み込み | 請求書を Repository から読む |
-| 業務判断の呼び出し | `cancelInvoice(invoice)` を呼ぶ |
+| 業務判断の呼び出し | `cancelInvoice(invoice, now)` を呼ぶ |
 | トランザクション | どこからどこまでを一貫して保存するか決める |
 | 保存 | 変更後の請求書を保存する |
 | 外部処理 | 監査ログ、メール、Queue を呼ぶ |
+
+外部通知まで同期的に必要なら、補償や状態管理も設計する。
+DB 更新と外部通知の意図を原子的に残したいなら、Outbox を検討する。
 
 <!--
 話すこと:
@@ -340,11 +357,21 @@ const cancelInvoice = async (invoiceId: string): Promise<CancelResult> => {
 案 B:
 
 ```ts
-type Invoice = { status: "draft" | "issued" | "paid" | "cancelled" }
+type Invoice =
+  | { status: "draft" }
+  | { status: "issued"; issuedAt: Date }
+  | { status: "paid"; paidAt: Date }
+  | { status: "cancelled"; cancelledAt: Date }
 
-const cancel = (invoice: Invoice): CancelResult => {
-  if (invoice.status === "paid") return { type: "cannot_cancel_paid" }
-  return { type: "cancelled", invoice: { ...invoice, status: "cancelled" } }
+const cancel = (invoice: Invoice, now: Date): CancelResult => {
+  if (invoice.status !== "issued") {
+    return { type: "cannot_cancel", currentStatus: invoice.status }
+  }
+
+  return {
+    type: "cancelled",
+    invoice: { status: "cancelled", cancelledAt: now },
+  }
 }
 ```
 

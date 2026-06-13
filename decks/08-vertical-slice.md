@@ -85,11 +85,13 @@ Slice は「ユーザーや業務から見た 1 つの変更単位」。
 チームが変更をどう扱うかで決める。
 
 Package by Feature は主に「どこに置くか」の話。
-Vertical Slice は「1つの要求を、入力から永続化まで縦に切り、Slice 間の結合を小さくする」設計方針。
+Vertical Slice は「一つの要求を、入口から結果や副作用まで、end-to-end な変更単位としてまとめる」設計方針。
+
+Read-only、外部APIだけを呼ぶ処理、永続化しない処理も Slice になり得る。
 
 <!--
 話すこと:
-- ここでは前提の言葉をゆっくり揃える。専門用語は、正確さよりも会話で同じものを指せることを優先する。
+- ここでは前提の言葉をゆっくり揃える。最初は直感的な説明から入る。ただし、正式な定義との差と、この回で省略している範囲を明示する。
 - 似た言葉が出ても、粒度が違う話なのか、目的が違う話なのかを見分ける姿勢を強調する。
 - 分からない言葉があれば、この場で止めて確認してよいと伝える。
 -->
@@ -127,7 +129,7 @@ features/
 
 Package by Feature は、機能単位でファイルを置く。
 
-Vertical Slice はさらに、ユースケースごとの入力、アプリケーション処理、永続化、外部連携を一つの変更単位として扱う。
+Vertical Slice はさらに、ユースケースごとの入力、アプリケーション処理、結果、副作用を一つの変更単位として扱う。
 
 `features/` に移しただけでは Vertical Slice とは言えない。
 
@@ -212,6 +214,8 @@ Vertical Slice では、少しの重複を許すことがある。
 | 共通 HTTP helper | たまたま似ている処理 |
 | 安定した Value Object | 変更理由が違う共通関数 |
 
+共有 Domain は便利だが、所有者の曖昧な巨大 Shared Kernel になり得る。
+
 <!--
 話すこと:
 - 表は上から読むだけでなく、横に比べる。何が違うからコストや適用場面が変わるのかを見る。
@@ -237,7 +241,10 @@ Vertical Slice では、少しの重複を許すことがある。
 - 認証は middleware、ログやメトリクスは middleware や Decorator に置ける
 - 業務認可は Application / Domain 側で判断する
 - トランザクションは、整合性境界を知る Application Service 側で張る
-- Slice 間の直接 import は原則避け、共有 API や shared domain を経由する
+- Slice 間で依存する場合は、公開API、依存方向、循環依存、内部実装への依存、共有概念の所有者を見る
+- 共有 Domain は、同じ不変条件と変更理由を持つ場合に限って慎重に置く
+
+Decorator は、元の処理を変えずにログ、計測、キャッシュなどを外側から追加する形。
 
 <!--
 話すこと:
@@ -265,11 +272,11 @@ Vertical Slice では、少しの重複を許すことがある。
 -->
 ---
 
-## 個人ワーク: どの変更で有利になるか
+## 個人ワーク: どの配置方針が合うか
 
 「請求書を再送する」機能を追加する場合を考える。
 
-Layered:
+Package by Layer:
 
 ```txt
 controllers/invoice-controller.ts
@@ -278,7 +285,7 @@ repositories/invoice-repository.ts
 mailers/invoice-mailer.ts
 ```
 
-Vertical Slice:
+Package by Use Case:
 
 ```txt
 features/resend-invoice/route.ts
@@ -287,6 +294,8 @@ features/resend-invoice/ports.ts
 features/resend-invoice/prisma-repository.ts
 features/resend-invoice/mail-adapter.ts
 ```
+
+どちらも、内部に Presentation、Application、Domain、Infrastructure の論理構造を持ち得る。
 
 考えること:
 
@@ -299,7 +308,7 @@ features/resend-invoice/mail-adapter.ts
 
 ```txt
 Decision:
-Layered / Vertical Slice / 条件付き
+Package by Layerを維持する / Package by Use Caseへ寄せる / 機能群単位のPackage by Featureにする / 追加情報が必要
 
 Drivers:
 重視した変更単位や制約
@@ -316,17 +325,20 @@ Trade-offs:
 -->
 ---
 
-## 答え合わせ: 変更単位が機能なら Slice が効く
+## 答え合わせ: 配置と論理構造を分ける
 
-この例では、再送機能だけを追うなら Vertical Slice が読みやすい。
+この例では、再送機能だけを追うなら Package by Use Case が読みやすい。
 
-| 観点 | Package by Layer | Vertical Slice |
+| 観点 | Package by Layer | Package by Use Case |
 |---|---|---|
 | 仕様の追跡 | 複数ディレクトリを移動する | 近い場所で読める |
 | 技術責務 | 分かりやすい | Slice 内にまとまる |
 | 共通化 | 早く共有しやすい | 重複を許容する判断が必要 |
 | 外部依存 | Service から見えやすい | Port / Adapter に分けやすい |
 | 横断変更 | まとめて直しやすい場合がある | 複数 Slice の確認が必要 |
+
+Layered と Vertical Slice は排他的ではない。
+Slice 内部を Layered に分ける構成も成立する。
 
 ただし、全 Slice に同じ構造を強制すると過剰になる。
 
@@ -343,13 +355,15 @@ Trade-offs:
 ## 今日の判断基準
 
 Vertical Slice は、変更単位をユースケースに寄せ、Slice 間の結合を小さくする設計方針。
+Layered Architecture と対立するのではなく、主にコード配置と変更単位の軸で見る。
 
 | 状況 | 判断 |
 |---|---|
 | 機能単位で変更される | Slice にまとめる価値が高い |
 | 単純 CRUD | 薄い構造で十分な場合がある |
 | 外部依存が濃い | Slice 内で Port / Adapter を検討する |
-| 共有したくなる | 本当に同じ変更理由かを確認する |
+| Slice 間で依存したい | 公開API、依存方向、循環依存、所有者を確認する |
+| 共有したくなる | 本当に同じ変更理由か、巨大な shared domain にならないかを確認する |
 
 次回は、モジュール境界とデプロイ境界を分けて考える。
 

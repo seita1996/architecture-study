@@ -43,8 +43,15 @@ title: "第11回: CQRSとEvent Sourcing"
 
 | 用語 | 意味 |
 |---|---|
-| CQS | メソッドを Command と Query に分ける原則 |
+| CQS | 状態を変更しない Query と、状態を変更する Command を分離する原則 |
 | CQRS | 書き込みモデルと読み取りモデルを分離する設計 |
+
+CQS の古典的な考え方:
+
+- Query: 値を返し、観測可能な状態を変更しない
+- Command: 状態を変更し、値を返さない
+
+実務では、Command が生成IDや処理結果を返すなど、意図的に緩和することもある。
 
 ```txt
 Write:
@@ -59,7 +66,25 @@ Read:
 <!--
 話すこと:
 - CQRS の中心はモデル分離。物理DB分離は選択肢の一つ。
-- Command という語はここではCQRS文脈の書き込み要求として使う。
+- CQSのCommand、CQRSのCommand、第10回のCommand Messageは似ているが文脈が違うと補足する。
+-->
+---
+
+## Command という言葉の違い
+
+| 文脈 | Command の意味 |
+|---|---|
+| GoF Command | 実行する操作をオブジェクトや関数として表す |
+| Command Message | 相手に実行してほしい作業を message として送る |
+| CQS Command | 状態を変更する操作 |
+| CQRS Command | Write Model へ送る書き込み要求 |
+
+同じ単語でも、どの文脈の話かを確認する。
+
+<!--
+話すこと:
+- 第10回のCommand Messageと、この回のCQS/CQRS Commandを混同しないようにする。
+- 設計議論では「どの意味のCommandか」を確認するだけで誤解が減る。
 -->
 ---
 
@@ -102,6 +127,33 @@ InvoicePaid
 話すこと:
 - 「履歴を保存する」だけではない。現在状態の代わりにイベント列を正本にする。
 - 監査ログが必要なだけなら、監査ログテーブルで足りることも多い。
+-->
+---
+
+## Event Sourcing の処理の流れ
+
+Event Sourcing では、現在状態を直接の正本にしない。
+
+```txt
+Event Stream
+  -> Aggregate 再構築
+  -> Version 確認
+  -> New Event append
+  -> Projection 更新
+```
+
+用語:
+
+- Aggregate: 関連する状態と不変条件を一貫して扱うまとまり
+- Projection: 画面表示や検索に使いやすい読み取り用状態
+- Snapshot: イベント数が増えたときの再構築高速化
+- Optimistic concurrency: 同じ version への同時 append を防ぐ
+- Replay: 保存済みイベントを再適用して状態やProjectionを作り直すこと
+
+<!--
+話すこと:
+- Projectionは正本ではなく、イベント列から作られる読み取り用の状態として説明する。
+- Optimistic concurrencyは、同時更新をロックで待たせるのではなく、version不一致として検出する考え方。
 -->
 ---
 
