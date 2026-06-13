@@ -370,6 +370,8 @@ mail API
 
 Outboxは、DB更新と「後で実行すべきことの記録」を同じtransactionに入れるための考え方。
 その後ろをDB polling workerにするか、broker / queueへrelayするかは別の設計判断。
+DBテーブルをWorkerが直接処理する構成は、Transactional Job QueueやDB-backed Job Queueと呼ばれることもある。
+BrokerへpublishするOutbox relayと、守りたいFailure modeは近いが、運用構造は異なる。
 
 <!--
 話すこと:

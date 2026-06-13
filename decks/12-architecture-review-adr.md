@@ -174,10 +174,14 @@ Current design:
 
 Quality risks:
 今回関係するものだけ書く
+- 変更容易性
+- 一貫性・データ完全性
 - 性能・容量
 - 可用性・回復
+- 障害分離
 - 観測可能性・運用性
 - セキュリティ
+- 開発者認知負荷
 
 Problems:
 どの変更や障害が難しいか
@@ -266,7 +270,7 @@ Owners:
   Invoice team
 
 Decision:
-  請求書発行後のメール送信は Outbox 経由の Command Message にする。
+  請求書発行後のメール送信要求は Transactional Outbox へ記録する。
 
 Context:
   メールAPIは一社固定だがタイムアウトが多い。
@@ -282,6 +286,7 @@ Consequences / Trade-offs:
 Decision Rules / Constraints:
   請求書保存とOutbox message保存は同じDB transactionに含める。
   外部メールAPI呼び出しはDB transaction内で行わない。
+  Command/Eventの選択はこのADRでは固定せず、別ADRまたはmessage contractで決める。
 
 Review Conditions:
   メール送信が同期応答に必須になったら、状態管理と補償を再検討する。
@@ -292,6 +297,7 @@ Rejected Options:
 
 Related Decisions:
   ADR: 請求書発行コードをユースケース単位に配置する。
+  ADR: メール通知には SendInvoiceEmail Command Message を使う。
 ```
 
 <!--
@@ -309,6 +315,24 @@ Related Decisions:
 | 0 | 観点が出てこない |
 | 1 | 講師の問いかけがあれば出せる |
 | 2 | 自律的に具体化し、判断へ利用できる |
+| N/A | 今回の問題に直接関係しない理由を説明できる |
+
+常に評価する項目:
+
+- 問題設定
+- Driver
+- 設計軸
+- 代替案
+- Trade-off
+- 判断
+- 不確実性
+- 見直し条件
+
+問題に関係する場合に評価する項目:
+
+- スコープ
+- Failure mode
+- 品質特性
 
 | 項目 | 2点の状態 |
 |---|---|
@@ -325,7 +349,7 @@ Related Decisions:
 | 見直し条件 | 将来の再判断条件を残せる |
 
 合計点は参考値。
-必須項目に0点がないか、前後比較でどの観点が伸びたかを重視する。
+常に評価する項目に0点がないか、問題に関係する項目をN/Aにした理由が妥当か、前後比較でどの観点が伸びたかを重視する。
 ただし、Failure mode、整合性、品質特性に関わる重大な見落としがある場合は、点数だけで合格にしない。
 性能、可用性、運用性、セキュリティは、この勉強会だけで解決能力までは評価せず、追加計測や専門レビューが必要な論点として識別できるかを見る。
 

@@ -285,13 +285,8 @@ main.ts
 ## 個人ワーク: Port / Application / Domain
 
 ```ts
-// shared-types.ts
-export type InvoiceId = string
-export type InvoiceRow = { id: string; status: string }
-
 // issue-invoice-port.ts
-import type { InvoiceId } from "./shared-types"
-import type { IssuedInvoice, Invoice } from "./invoice"
+import type { InvoiceId, IssuedInvoice, Invoice } from "./invoice"
 export type IssueInvoiceInput = { invoiceId: InvoiceId }
 export type IssueInvoiceResult =
   | { type: "issued"; invoice: IssuedInvoice }
@@ -321,7 +316,7 @@ export const createIssueInvoice = (deps: {
 }
 
 // invoice.ts
-import type { InvoiceId } from "./shared-types"
+export type InvoiceId = string
 export type DraftInvoice = {
   id: InvoiceId
   status: "draft"
@@ -337,8 +332,7 @@ export const issueDraftInvoice = (invoice: DraftInvoice): IssuedInvoice => ({
 })
 
 // ports.ts
-import type { InvoiceId } from "./shared-types"
-import type { Invoice, IssuedInvoice } from "./invoice"
+import type { InvoiceId, Invoice, IssuedInvoice } from "./invoice"
 export type InvoiceRepository = {
   findById: (id: InvoiceId) => Promise<Invoice | null>
   save: (invoice: IssuedInvoice) => Promise<void>
@@ -350,6 +344,8 @@ export type InvoiceRepository = {
 - Input Portは外部からアプリケーションを呼ぶ契約。
 - Application ServiceはPortの型を満たし、Domain関数とOutput Portを使う。
 - Repositoryは全状態を返し、Application Serviceで「存在しない」と「状態が不適切」を分ける。
+- このコードでは並行発行の制御を省略している。実際にはversion付き条件更新、`WHERE status = 'draft'` による conditional update、transaction、冪等性キーなどを検討する。Portを置くだけでは整合性は守れない。
+- 小規模ではDomain型をInput Portの結果として返してもよいが、外部契約を安定させたい場合はApplication DTOへ変換する。
 -->
 ---
 
@@ -374,9 +370,12 @@ export const createInvoiceRoute =
   }
 
 // prisma-invoice-repository.ts
-import type { InvoiceRow, InvoiceId } from "./shared-types"
 import type { InvoiceRepository } from "./ports"
-import type { Invoice, IssuedInvoice } from "./invoice"
+import type { InvoiceId, Invoice, IssuedInvoice } from "./invoice"
+type InvoiceRow = {
+  id: string
+  status: "draft" | "issued"
+}
 export type PrismaClient = {
   invoice: {
     findUnique: (args: { where: { id: InvoiceId } }) => Promise<InvoiceRow | null>
