@@ -241,10 +241,17 @@ Database
 すべてを毎回実装する必要はない。
 どの責務を分けたいのかを先に決める。
 
+| 状況 | 構成例 |
+|---|---|
+| 単純 | `Application -> Prisma` |
+| 業務型とDB型が異なる | `Application -> Repository -> ORM + Row Mapper` |
+| 複雑なmapping責務がある | `Application -> Repository -> Data Mapper -> Database` |
+
 <!--
 話すこと:
 - Repository と Data Mapper は似た関数名になりやすいが、見せたい相手が違う。
 - Repository は業務側に見せる入口、Data Mapper は永続化との移動責務、Row Mapper は形の変換責務として説明する。
+- 確認したい観点: どの責務を分ける必要があるかで構成を変える。三層を毎回作る話ではない。
 -->
 ---
 
@@ -492,8 +499,8 @@ Repository を作っても、この競合は自動では消えない。
 請求書ではなく、座席予約で同じ整合性を考える。
 
 ```txt
-Request A: seat 10A が空いていることを確認
-Request B: seat 10A が空いていることを確認
+Request A: flight JL123 の seat 10A が空いていることを確認
+Request B: flight JL123 の seat 10A が空いていることを確認
 Request A: reservation を作成
 Request B: reservation を作成
 ```
@@ -501,13 +508,23 @@ Request B: reservation を作成
 考えること:
 
 - Repositoryを作るだけで二重予約は防げるか
-- unique constraint はどの列に必要か
+- 同じ座席を二重に取らない一意制約のスコープは何か
+- キャンセル後に再予約できるなら、どの状態だけを一意にするか
 - retryされた同じ予約要求をどう冪等にするか
+
+| 保証したいこと | 仕組み |
+|---|---|
+| 異なる要求が同じ座席を取らない | `flightId + seatId` など、座席割当に対する一意制約 |
+| 有効な予約だけを一意にしたい | `status = "active"` だけを対象にする制約、または現在割当テーブル |
+| 同じ予約要求の再送で複数予約を作らない | リクエストの Idempotency Key |
 
 <!--
 話すこと:
 - 問題構造は二重発行と同じ。永続化境界と整合性保証を分けて見る。
-- 「同じ座席を二重に取らない」はDB制約、transaction、idempotencyを組み合わせて考える。
+- 確認したい観点: 座席の一意性と、同じ要求の再送は別のFailure mode。
+- 典型的な誤答: `seatId` だけをuniqueにする、またはidempotency keyだけで座席競合も防げると考える。
+- 最低限出てほしい問い: 座席は何に対して一意か、キャンセル済み予約をどう扱うか、再送をどう識別するか。
+- 追加情報があれば判断が変わる点: フライト、上映、イベントなどの予約単位、キャンセル後の再販可否、DBの部分unique制約対応。
 -->
 ---
 

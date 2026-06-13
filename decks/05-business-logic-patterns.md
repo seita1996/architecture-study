@@ -163,9 +163,11 @@ type InvoiceBase = {
   amount: Money
 }
 
+type Currency = "JPY" | "USD"
+
 type Money = {
-  amountMinor: number
-  currency: "JPY" | "USD"
+  amountInMinorUnits: number
+  currency: Currency
 }
 
 type Invoice =
@@ -328,15 +330,18 @@ Service Layer は、業務ルールそのものを全部置く場所ではない
 | 業務判断の呼び出し | `cancelInvoice(invoice, now)` を呼ぶ |
 | トランザクション | どこからどこまでを一貫して保存するか決める |
 | 保存 | 変更後の請求書を保存する |
-| 外部処理 | 監査ログ、メール、Queue を呼ぶ |
+| 同一整合性境界内の保存 | 請求書、DB監査ログを保存する |
+| 非同期処理の意図を記録 | Outbox message を保存する |
+| 外部I/Oを起動・調整 | メール、決済、外部Queueを呼ぶ |
 
 外部通知まで同期的に必要なら、補償や状態管理も設計する。
 DB 更新と外部通知の意図を原子的に残したいなら、Outbox を検討する。
 
 <!--
 話すこと:
-- Application Service は、永続化、ドメイン判断、外部処理を順番に調整する。
-- 監査ログやQueueを呼ぶ場合も、transaction内で行うのか、Outboxへ出すのかで失敗時の意味が変わる。
+- Application Service は、永続化、ドメイン判断、外部I/Oの意図や起動を順番に調整する。
+- 同じ「監査」でも、同一DBの監査ログと外部監査基盤では整合性境界が違う。
+- Queueへ直接publishするのか、Outbox messageをDBへ保存するのかで片成功の意味が変わる。
 -->
 ---
 
@@ -394,9 +399,11 @@ type InvoiceBase = {
   amount: Money
 }
 
+type Currency = "JPY" | "USD"
+
 type Money = {
-  amountMinor: number
-  currency: "JPY" | "USD"
+  amountInMinorUnits: number
+  currency: Currency
 }
 
 type Invoice =

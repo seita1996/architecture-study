@@ -110,18 +110,18 @@ architecture-study/
 | 回 | 推奨時間 | 理由 |
 |---:|---|---|
 | 0 | 30分または事前資料 | 前提知識の補習。理解度により可変 |
-| 1 | 45〜60分 | Driver、設計軸、分類地図を扱う |
+| 1 | 60分 | Driver、設計軸、分類地図を扱う |
 | 2 | 30〜40分 | 凝集・結合に集中できる |
 | 3 | 45分 | DIP、LSP、ISP、抽象の評価 |
 | 4 | 30〜40分 | Layer、Tier、配置の区別 |
-| 5 | 45〜60分 | Transaction Script、Domain Model、Application Service |
-| 6 | 60分 | Mapper、Repository、Query、整合性、補足パターン |
+| 5 | 60分 | Transaction Script、Domain Model、Application Service |
+| 6 | 60〜75分 | Mapper、Repository、Query、整合性、補足パターン |
 | 7 | 45分 | Ports and Adapters と依存方向 |
 | 8 | 40〜45分 | Feature、Use Case、Vertical Slice の比較 |
-| 9 | 45〜60分 | モジュール、サービス、所有・デプロイ境界 |
-| 10 | 60分 | メッセージング、Outbox、冪等性、失敗設計 |
-| 11 | 60分 | CQS、CQRS、Event Sourcing と採用コスト |
-| 12 | 事前課題＋60〜90分 | 実コードレビュー、Worksheet、ADR |
+| 9 | 60分 | モジュール、サービス、所有・デプロイ境界 |
+| 10 | 60〜75分 | メッセージング、Outbox、冪等性、失敗設計 |
+| 11 | 60〜75分 | CQS、CQRS、Event Sourcing と採用コスト |
+| 12 | 事前課題＋90分 | 実コードレビュー、Worksheet、ADR |
 
 時間を延長しても、説明時間だけを増やしません。
 延長分は、参加者が判断を書く時間、複数回答の比較、誤答や反対意見の検討、コード例の前提確認、実プロダクトへの転移問題、質疑に使います。
@@ -133,6 +133,8 @@ architecture-study/
 | Core | 判断に使えるところまで理解する |
 | Supplementary | 存在、目的、主なコストを知る |
 | Advanced | 実装や運用には別途学習が必要 |
+
+Advanced は該当する回だけで扱います。例えば、Event schema evolution、Replay時の副作用制御、exactly-onceの適用範囲、Saga、分散トレーシング、複雑なtransaction isolationなどです。
 
 演習は長いグループワークにはしません。ただし、考えた内容は必ず外部化します。
 

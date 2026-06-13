@@ -405,14 +405,27 @@ type InvoiceWriter = {
 請求書ではなく、ファイル保存で同じ考え方を使う。
 
 ```ts
+type DocumentFile = {
+  name: string
+  content: Uint8Array
+}
+
+type S3Sdk = {
+  putObject: (input: {
+    bucket: string
+    key: string
+    body: Uint8Array
+  }) => Promise<void>
+}
+
 const uploadDocument = async (
-  file: File,
-  s3: S3Client,
+  file: DocumentFile,
+  s3: S3Sdk,
 ): Promise<void> => {
   await s3.putObject({
-    Bucket: "documents",
-    Key: file.name,
-    Body: file.body,
+    bucket: "documents",
+    key: file.name,
+    body: file.content,
   })
 }
 ```
@@ -421,12 +434,32 @@ const uploadDocument = async (
 
 - ユースケースは S3 の詳細を知るべきか
 - 抽象を作るなら、名前は `Storage` か `DocumentStore` か
-- ローカル保存、S3、テスト用Fakeを本当に差し替えたいか
+- S3固有のエラーをアプリケーションの失敗型へ変換したいか
+- Bucket、Key、権限設定をユースケースへ漏らしたいか
+- ドキュメント保存という業務上の会話を表現できているか
+
+改善案:
+
+```ts
+type DocumentStore = {
+  save: (
+    document: DocumentFile,
+  ) => Promise<
+    | { type: "saved"; documentId: string }
+    | { type: "temporarily_unavailable" }
+    | { type: "rejected"; reason: string }
+  >
+}
+```
 
 <!--
 話すこと:
 - 請求書以外でも、具体実装へ直接依存してよいかを同じ問いで見られることを確認する。
 - 抽象の名前を技術名ではなく、ユースケース側の言葉に寄せるかを見る。
+- 確認したい観点: 差し替えだけでなく、失敗型、設定、業務語彙を境界で扱えているか。
+- 典型的な誤答: Fakeに差し替えたいから常にStorageを作る、またはSDKを直接使ってもテストできれば十分とする。
+- 最低限出てほしい問い: S3の失敗や権限設定はユースケースの言葉か、ドキュメント保存の契約は何を返すべきか。
+- 追加情報があれば判断が変わる点: 保存先が本当に複数あるか、S3固有機能を業務要件として使うか、失敗時の再試行方針。
 -->
 ---
 
