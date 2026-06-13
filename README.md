@@ -128,16 +128,29 @@ architecture-study/
 |---|---|
 | 想起問題 | 前回の用語を自分の言葉で1文説明する |
 | 分類問題 | どの概念に該当するか、根拠を1文で書く |
-| 判断問題 | Decision / Drivers / Alternatives / Trade-offs を書く |
+| 判断問題 | 通常回は Decision / Driver / Trade-offs / Unknown を短く書く |
 
-判断問題では、次の形式でチャットや共有ドキュメントへ短く記録してから、答え合わせと整理に進みます。
+通常回の判断問題では、4分で書ける最小形式にします。
 
 ```txt
 Decision:
 選ぶ案
 
+Driver / Priority:
+最も重視した条件
+
+Trade-offs:
+得るものと失うもの
+
+Unknown:
+判断に足りない情報
+```
+
+第12回や事前課題では、次の完全版を使います。
+
+```txt
 Drivers:
-重視した要求、品質特性、制約
+要求、品質特性、制約
 
 Priority:
 どのDriverを最優先するか

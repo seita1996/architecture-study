@@ -70,13 +70,17 @@ title: "第12回: 実プロダクト設計レビューとADR"
 | 依存境界 | 外部技術や失敗契約をどこで変換するか |
 | 業務ロジック | Transaction Script / Domain Model のどちらが複雑さに合うか |
 | Write側永続化 | ORM直接か、Repository境界を置くか |
-| Read側アクセス | ORM直接、Query Object、Read Model のどれを使うか |
+| Read側取得 | ORMを直接使うか、専用Queryを置くか |
+| Read側モデル | Write Modelを使うか、専用Read Modelを持つか |
 | Mapper | DB型と業務型を分けるか |
 | transactionの所有者 | Use Case、request、framework のどこが境界を決めるか |
 | transactionの実装 | ORM API、Transaction Runner、宣言的管理のどれを使うか |
 | 変更追跡 | 明示保存か、Change Tracking を利用するか |
 | 応答方式 | 呼び出し元が最終処理完了を待つか |
-| Transport | Function、HTTP、Queue、Broker のどれで運ぶか |
+| 呼び出し境界 | プロセス内か、ネットワーク越しか |
+| 通信方式 | HTTP/RPCか、Messagingか |
+| 配信形態 | Point-to-pointか、Publish-subscribeか |
+| インフラ | どの Broker / Queue service を使うか |
 | Message semantics | Command か Event か |
 | Delivery semantics | at-most-once / at-least-once をどう扱うか |
 | 実行境界 | 同一プロセスか、別プロセスか |
@@ -124,8 +128,8 @@ YYYY-MM-DD
 ## Consequences / Trade-offs
 良い結果と悪い結果。増える実装量、学習コスト、運用コスト
 
-## Rules
-Port を作る基準、例外
+## Decision Rules / Constraints
+この決定を適用する範囲、例外、守る規則
 
 ## Review Conditions
 どの条件で再検討するか

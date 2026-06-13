@@ -122,12 +122,14 @@ Layered Architecture は論理構造なので、Package by Layer と同じ意味
 
 ```txt
 features/
-  create-invoice/
-  cancel-invoice/
-  send-invoice/
+  invoice/              # Package by Feature
+    create-invoice/     # Package by Use Case
+    cancel-invoice/
+    send-invoice/
 ```
 
-Package by Feature は、機能単位でファイルを置く。
+Package by Feature は、機能群単位でファイルを置く。
+Package by Use Case は、ユースケース単位でさらに近づける。
 
 Vertical Slice はさらに、ユースケースごとの入力、アプリケーション処理、結果、副作用を一つの変更単位として扱う。
 
@@ -242,13 +244,14 @@ Vertical Slice では、少しの重複を許すことがある。
 - 複数ユースケースで同じ不変条件や整合性境界を守るなら、共有 Domain として置く
 - 単純な参照 Slice では、Query Handler から Prisma を直接利用してよい
 - 複雑な業務モデルを取得・保存する場合は、専用 Repository Adapter を検討する
-- 認証は middleware、ログやメトリクスは middleware や Decorator に置ける
+- 認証は middleware、ログやメトリクスは middleware や処理ラッパーに置ける
 - 業務認可は Application / Domain 側で判断する
 - トランザクションは、整合性境界を知る Application Service 側で張る
 - Slice 間で依存する場合は、公開API、依存方向、循環依存、内部実装への依存、共有概念の所有者を見る
 - 共有 Domain は、同じ不変条件と変更理由を持ち、所有者が明確な場合に限って慎重に置く
 
-Decorator は、元の処理を変えずにログ、計測、キャッシュなどを外側から追加する形。
+Decorator というパターン名は第10回以降で補足する。
+ここでは、元の処理を変えずに外側からログや計測を足す程度に捉える。
 
 <!--
 話すこと:

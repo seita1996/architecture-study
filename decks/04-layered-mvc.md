@@ -101,6 +101,8 @@ models/
 技術責務ごとに置き場所が明確になる。
 
 これは Layered Architecture そのものではなく、Package by Layer という物理配置の一例。
+この回では `Repository` を「DBアクセスを担当する層」という一般的な意味で使う。
+正式な Repository パターンは第6回で扱う。
 
 <!--
 話すこと:
@@ -319,7 +321,7 @@ tests/invoice-service.test.ts
 
 ```txt
 Decision:
-Layeredのままでよい / 境界を見直す / 追加調査
+Package by Layerのままでよい / Package by Feature・Use Caseへ寄せる / 追加調査
 
 Drivers:
 重視した変更単位や制約
@@ -331,12 +333,12 @@ Trade-offs:
 <!--
 話すこと:
 - ここは各自で短く判断を書いてから答え合わせへ進む。
-- どのファイルに散るかだけでなく、Layered のまま扱えるのか、別の境界が必要かを言葉にしてもらう。
+- どのファイルに散るかだけでなく、Package by Layer のまま扱えるのか、配置や変更境界を見直すべきかを言葉にしてもらう。
 - 次のスライドで答え合わせをするので、ここでは自分なりの仮説を持ってもらう。
 -->
 ---
 
-## 答え合わせ: Layered では技術責務ごとに散る
+## 答え合わせ: Package by Layer では技術責務ごとに散りやすい
 
 触る場所はおおよそこうなる。
 
@@ -367,8 +369,9 @@ Layered は悪い構成ではない。
 
 | 軸 | 例 |
 |---|---|
-| 論理構造 | Layered、Hexagonal |
-| 物理配置 | Package by Layer、Package by Feature、Vertical Slice |
+| 論理構造・依存規則 | Layered、Hexagonal |
+| コード配置 | Package by Layer、Package by Feature、Package by Use Case |
+| 変更境界 | Vertical Slice |
 
 機能単位で変更されるシステムでは、Package by Layer による分散コストを意識する。
 

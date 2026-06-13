@@ -165,15 +165,16 @@ HTTP Adapter -> Application Service -> Repository Adapter
 契約としての関係:
 
 HTTP Adapter -------------> Input Port
-Application Service -----> implements Input Port
+Application Service -----> satisfies Input Port
 Application Service -----> Output Port
-Repository Adapter ------> implements Output Port
+Repository Adapter ------> satisfies Output Port
 ```
 
 外部から来るもの、外部へ出るものを Adapter として扱う。
 
 Port は実行時に処理する中間クラスではなく、境界の契約。
 外側の Adapter が、内側で定義された Port に適合する。
+関数型 TypeScript では `implements` キーワードではなく、関数やオブジェクトが Port の型を満たすと考える。
 
 <!--
 話すこと:

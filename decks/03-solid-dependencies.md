@@ -138,6 +138,9 @@ const createInvoice =
     const contract = await prisma.contract.findUnique({
       where: { id: input.contractId },
     })
+    if (!contract) {
+      return { type: "contract_not_found" }
+    }
     // issue invoice
 
     return { type: "issued", invoiceId: "inv_001" }
@@ -247,7 +250,8 @@ type InvoiceDependencies = {
   deleteInvoice: (invoiceId: string) => Promise<void>
 }
 
-declare const markInvoiceCancelled: (invoice: Invoice) => Invoice
+declare const decideInvoiceCancellation:
+  (invoice: Invoice) => CancelInvoiceDecision
 
 const cancelInvoice =
   (deps: InvoiceDependencies) =>
@@ -255,9 +259,11 @@ const cancelInvoice =
     const invoice = await deps.findInvoice(invoiceId)
     if (!invoice) return { type: "not_found" }
     // 状態遷移の詳細は第5回で扱う
-    const cancelledInvoice = markInvoiceCancelled(invoice)
-    await deps.saveInvoice(cancelledInvoice)
-    return { type: "cancelled" }
+    const decision = decideInvoiceCancellation(invoice)
+    if (decision.type === "cancelled") {
+      await deps.saveInvoice(decision.invoice)
+    }
+    return decision
   }
 ```
 
@@ -280,7 +286,8 @@ type CancelInvoiceDependencies = {
   saveInvoice: (invoice: Invoice) => Promise<void>
 }
 
-declare const markInvoiceCancelled: (invoice: Invoice) => Invoice
+declare const decideInvoiceCancellation:
+  (invoice: Invoice) => CancelInvoiceDecision
 
 const cancelInvoice =
   (deps: CancelInvoiceDependencies) =>
@@ -288,9 +295,11 @@ const cancelInvoice =
     const invoice = await deps.findInvoice(invoiceId)
     if (!invoice) return { type: "not_found" }
     // 状態遷移の詳細は第5回で扱う
-    const cancelledInvoice = markInvoiceCancelled(invoice)
-    await deps.saveInvoice(cancelledInvoice)
-    return { type: "cancelled" }
+    const decision = decideInvoiceCancellation(invoice)
+    if (decision.type === "cancelled") {
+      await deps.saveInvoice(decision.invoice)
+    }
+    return decision
   }
 ```
 
