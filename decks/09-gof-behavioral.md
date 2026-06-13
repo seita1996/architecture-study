@@ -57,7 +57,7 @@ GoF パターンを暗記リストにしない。
 | 料金計算ルールを差し替えたい | Strategy |
 | 処理手順は同じで一部だけ違う | Template Method |
 | 状態ごとに振る舞いが違う | State |
-| 操作をデータとして渡したい | Command |
+| 操作を実行可能な単位として渡したい | GoF Command |
 
 <!--
 話すこと:
@@ -133,13 +133,23 @@ Strategy が効くのは、次のようなとき。
 TypeScript では継承より、関数合成の方が自然な場合がある。
 
 ```ts
-type AsyncAction<T> = () => Promise<T>
+type IssueSteps = {
+  load: (id: ContractId) => Promise<Contract | null>
+  validate: (contract: Contract) => IssueInvoiceResult | null
+  create: (contract: Contract) => Promise<Invoice>
+}
 
-const withAudit = async <T>(name: string, action: AsyncAction<T>) => {
-  await audit.start(name)
-  const result = await action()
-  await audit.finish(name)
-	return result
+const createIssueFlow =
+  (steps: IssueSteps) =>
+  async (contractId: ContractId): Promise<IssueInvoiceResult> => {
+    const contract = await steps.load(contractId)
+    if (!contract) return { type: "contract_not_found" }
+
+    const invalid = steps.validate(contract)
+    if (invalid) return invalid
+
+    const invoice = await steps.create(contract)
+    return { type: "issued", invoiceId: invoice.id }
 }
 ```
 
@@ -155,13 +165,16 @@ const withAudit = async <T>(name: string, action: AsyncAction<T>) => {
 
 継承で固定手順を作るより、高階関数で十分なことがある。
 
-`withAudit` は次を固定している。
+`createIssueFlow` は次を固定している。
 
-- 開始ログを出す
-- 本処理を実行する
-- 終了ログを出す
+- 契約を読む
+- 見つからなければ失敗を返す
+- 検証する
+- 請求書を作る
 
-差し替わるのは、本処理である `action`。
+差し替わるのは、各ステップの実装。
+
+Decorator は既存の契約を保ったまま外側からログや計測を足す。Template Method は処理手順そのものを固定する。
 
 <!--
 話すこと:
@@ -174,13 +187,26 @@ const withAudit = async <T>(name: string, action: AsyncAction<T>) => {
 ## State
 
 ```ts
-invoice.pay()
-invoice.cancel()
+type InvoiceState =
+  | { type: "draft" }
+  | { type: "issued"; issuedAt: Date }
+  | { type: "paid"; paidAt: Date }
+
+type StateBehavior = {
+  pay: (invoice: Invoice) => PayInvoiceResult
+  cancel: (invoice: Invoice) => CancelInvoiceResult
+}
+
+const stateBehaviors: Record<InvoiceState["type"], StateBehavior> = {
+  draft: draftBehavior,
+  issued: issuedBehavior,
+  paid: paidBehavior,
+}
 ```
 
 状態によって振る舞いを変える。
 
-`status` の switch を散らばらせる代わりに、状態遷移を関数として集約する設計。
+`status` の switch を散らばらせる代わりに、状態ごとの振る舞いへ委譲する設計。
 
 <!--
 話すこと:
@@ -213,15 +239,28 @@ if (invoice.status === "paid") {
 ## Command
 
 ```ts
-type CreateInvoiceCommand = {
+type Command = () => Promise<void>
+
+const createIssueInvoiceCommand =
+  (deps: Dependencies, input: IssueInvoiceInput): Command =>
+  async () => {
+    await issueInvoice(deps, input)
+  }
+```
+
+要求の実行をカプセル化する。
+
+名前が似ているものを分ける。
+
+```ts
+type IssueInvoiceCommandMessage = {
   contractId: string
   requestedBy: string
 }
 ```
 
-操作をデータとして表現する。
-
-HTTP、Queue、UseCase、監査ログの境界で扱いやすい。
+`IssueInvoiceCommandMessage` は入力データ。GoF Command は実行可能な振る舞い。
+第12回の CQRS Command は、書き込み要求を表すメッセージとして扱う。
 
 <!--
 話すこと:
@@ -238,7 +277,7 @@ HTTP、Queue、UseCase、監査ログの境界で扱いやすい。
 | Strategy | ルール差し替えが多い | 関数が増える |
 | Template Method | 手順が固定で一部だけ違う | 継承だと硬くなりやすい |
 | State | 状態遷移が複雑 | 遷移関数や状態型が増える |
-| Command | 操作を境界で渡したい | 単純処理では冗長 |
+| GoF Command | 操作を遅延実行、キューイング、取り消ししたい | 単純処理では冗長 |
 
 <!--
 話すこと:
@@ -255,11 +294,21 @@ HTTP、Queue、UseCase、監査ログの境界で扱いやすい。
 ```ts
 type Plan = "free" | "standard" | "enterprise"
 
+const assertNever = (value: never): never => {
+  throw new Error(`Unexpected plan: ${value}`)
+}
+
 const calculateMonthlyFee = (plan: Plan, seats: number): number => {
-  if (plan === "free") return 0
-  if (plan === "standard") return seats * 1200
-  if (plan === "enterprise") return seats * 2000 + 50000
-  return 0
+  switch (plan) {
+    case "free":
+      return 0
+    case "standard":
+      return seats * 1200
+    case "enterprise":
+      return seats * 2000 + 50000
+    default:
+      return assertNever(plan)
+  }
 }
 ```
 
@@ -320,7 +369,7 @@ const pricingStrategies: Record<Plan, PricingStrategy> = {
 | Strategy | ルールを差し替えたい |
 | Template Method | 手順は同じで一部だけ違う |
 | State | 状態ごとの振る舞いが増えている |
-| Command | 操作を境界で渡したい |
+| GoF Command | 実行可能な操作を渡したい |
 
 次回は、外部 API や横断処理をつなぐ構造と生成のパターンを見る。
 

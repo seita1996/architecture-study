@@ -144,14 +144,15 @@ features/
 
 ## 今日の地図
 
-設計の話は、だいたい次の 5 種類に分けて考える。
+設計の話は、だいたい次の種類に分けて考える。
 
 | 種類 | ざっくり言うと |
 |---|---|
 | 設計原則 | 判断するときの考え方 |
-| アーキテクチャスタイル | 大きな構造や境界の作り方 |
+| 設計軸 | 何を分けるか、どの境界を見るか |
+| アーキテクチャスタイル | 大きな構造や依存方向の作り方 |
 | エンタープライズアプリケーションパターン | 業務アプリでよく出る形 |
-| デザインパターン | 関数やモジュールの組み合わせ方 |
+| デザインパターン | 生成、構造、振る舞いに関する局所的な設計語彙 |
 | 実装技術 | 実際に使うライブラリ、FW、DB |
 
 <!--
@@ -177,6 +178,9 @@ features/
 原則はコードを直接作ってくれるものではない。
 
 「この依存は逆にした方がよいのでは？」のように、考える方向を示す。
+
+Dependency Inversion は、高水準の方針が低水準の詳細に直接依存しないようにする原則。
+高水準と低水準の両方が、業務上意味のある抽象へ依存する。
 
 <!--
 話すこと:
@@ -212,7 +216,30 @@ const issueInvoice =
 -->
 ---
 
-## 2. アーキテクチャスタイル
+## 2. 設計軸
+
+設計判断は、複数の独立した軸に分けると見通しがよくなる。
+
+| 軸 | 例 |
+|---|---|
+| コード配置 | Package by Layer、Package by Feature、Vertical Slice |
+| 依存方向 | Direct Dependency、Ports and Adapters |
+| 業務ロジック | Transaction Script、Domain Model |
+| プロセス境界 | Monolith、Microservices |
+| 通信スタイル | Direct Call、Queue、Event-driven |
+| 読み書き | Shared Model、CQRS |
+
+後半の回では、この軸を一つずつ見ていく。
+
+<!--
+話すこと:
+- ここで「アーキテクチャスタイル」という一つの箱に全部入れない。
+- Vertical Slice、Microservices、Event-driven は同じ粒度の選択肢ではないと先に伝える。
+- 最終回では、この軸ごとに現在の設計判断を説明するところへ戻ってくる。
+-->
+---
+
+## 3. アーキテクチャスタイル
 
 アーキテクチャスタイルは「大きな構造の作り方」。
 
@@ -221,11 +248,9 @@ const issueInvoice =
 - Layered Architecture
 - Hexagonal Architecture
 - Clean Architecture
-- Vertical Slice Architecture
-- Microservices
-- Event-driven Architecture
 
 アプリ全体、または大きな機能単位の境界と依存方向を決める。
+Vertical Slice、Microservices、Event-driven は後の回で別軸として扱う。
 
 <!--
 話すこと:
@@ -265,7 +290,7 @@ features/
 -->
 ---
 
-## 3. エンタープライズアプリケーションパターン
+## 4. エンタープライズアプリケーションパターン
 
 業務アプリで繰り返し出てくる問題に名前を付けたもの。
 
@@ -310,9 +335,9 @@ type InvoiceRepository = {
 -->
 ---
 
-## 4. デザインパターン
+## 5. デザインパターン
 
-デザインパターンは、より小さな部品の組み合わせ方。
+デザインパターンは、より小さな設計問題に名前を付けた語彙。
 
 例:
 
@@ -322,6 +347,7 @@ type InvoiceRepository = {
 - Decorator
 - Observer
 
+生成、構造、振る舞い、オブジェクトや関数の協調などを扱う。
 TypeScript では、クラスよりも関数や `type` で自然に表せることが多い。
 
 <!--
@@ -355,7 +381,7 @@ const campaignPricing: PricingStrategy = (order) =>
 -->
 ---
 
-## 5. 実装技術
+## 6. 実装技術
 
 実装技術は、設計を実現するために使う具体的な道具。
 
@@ -406,7 +432,7 @@ const campaignPricing: PricingStrategy = (order) =>
 | Dependency Injection | 実装手法 | 依存を外から渡すやり方 |
 | Repository | パターン | 永続化の詳細を隠す形 |
 | Prisma | 実装技術 | DB にアクセスする道具 |
-| Vertical Slice | アーキテクチャスタイル | 機能単位でまとめる構造 |
+| Vertical Slice | コード配置 / 設計方針 | 機能単位で変更をまとめる構造 |
 | Hono | 実装技術 | HTTP フレームワーク |
 
 <!--
@@ -469,9 +495,9 @@ const campaignPricing: PricingStrategy = (order) =>
 | Dependency Inversion | 設計原則 |
 | Repository | エンタープライズアプリケーションパターン |
 | Prisma | 実装技術 |
-| Vertical Slice | アーキテクチャスタイル |
+| Vertical Slice | コード配置 / 設計方針 |
 | Strategy | デザインパターン |
-| Microservices | アーキテクチャスタイル |
+| Microservices | プロセス境界 / デプロイ設計 |
 | Dependency Injection | 実装手法 |
 | Hono | 実装技術 |
 

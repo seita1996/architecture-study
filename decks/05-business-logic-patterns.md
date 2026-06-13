@@ -94,6 +94,10 @@ type CancelInvoiceScript = (invoiceId: string) => Promise<CancelInvoiceScriptRes
 const cancelInvoiceScript: CancelInvoiceScript = async (invoiceId) => {
   const invoice = await repository.find(invoiceId)
 
+  if (!invoice) {
+    return { type: "not_found" }
+  }
+
   if (invoice.status === "paid") {
     return { type: "cannot_cancel_paid_invoice" }
   }
@@ -200,6 +204,11 @@ const createCancelInvoiceUseCase =
   (deps: { invoices: InvoiceRepository; auditLog: AuditLog }): CancelInvoiceUseCase =>
   async (invoiceId) => {
     const invoice = await deps.invoices.findById(invoiceId)
+
+    if (!invoice) {
+      return { type: "not_found" }
+    }
+
     const result = cancelInvoice(invoice)
 
     if (result.type === "cancelled") {
@@ -211,7 +220,8 @@ const createCancelInvoiceUseCase =
   }
 ```
 
-外部依存やトランザクションを調整する入口になる。
+アプリケーションが提供する操作の入口になる。
+外部依存、トランザクション、応答の形を調整する。
 
 <!--
 話すこと:
@@ -225,12 +235,13 @@ const createCancelInvoiceUseCase =
 
 Service Layer は、業務ルールそのものを全部置く場所ではない。
 
-主な役割は「ユースケースの進行役」。
+主な役割は「アプリケーション操作の境界」と「ユースケースの進行役」。
 
 | 役割 | 例 |
 |---|---|
 | 読み込み | 請求書を Repository から読む |
 | 業務判断の呼び出し | `cancelInvoice(invoice)` を呼ぶ |
+| トランザクション | どこからどこまでを一貫して保存するか決める |
 | 保存 | 変更後の請求書を保存する |
 | 外部処理 | 監査ログ、メール、Queue を呼ぶ |
 
@@ -249,7 +260,7 @@ Service Layer は、業務ルールそのものを全部置く場所ではない
 | Transaction Script | 単純な CRUD、短い処理 | 複雑化すると手続きが肥大化 |
 | Domain Model | 状態遷移、不変条件が多い | モデリングコスト |
 | Application Service | 複数の外部処理を調整 | 責務が膨らみやすい |
-| Domain Service | どの Entity にも属さない業務ルール | 何でも置き場になりやすい |
+| Domain Service | 特定のドメイン型に自然に置けない業務判断 | 何でも置き場になりやすい |
 
 <!--
 話すこと:
@@ -322,7 +333,7 @@ const cancel = (invoice: Invoice): CancelResult => {
 | ルールが1つだけ | Transaction Script |
 | 状態遷移が増える | Domain Model |
 | 外部処理の順序が重要 | Service Layer |
-| 複数の集約をまたぐ判断 | Domain Service を検討 |
+| ドメイン型に自然に置けない判断 | Domain Service を検討 |
 
 もし次の仕様が増えるなら、案 B が効き始める。
 

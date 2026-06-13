@@ -33,7 +33,7 @@ title: "第10回: GoFデザインパターン後編"
 
 今日のゴール:
 
-- Adapter、Facade、Decorator、Factory、Observer の目的を言える
+- Adapter、Facade、Decorator、Factory の目的を言える
 - 既存コードの中にあるパターンを見つけられる
 - パターン名に引っ張られて過剰に分割しない
 - 関数合成や `type` で表現できるとわかる
@@ -58,7 +58,6 @@ title: "第10回: GoFデザインパターン後編"
 | 複数処理を 1 つの入口にまとめる | Facade |
 | ログや計測を外から足す | Decorator |
 | 生成ルールを関数に閉じ込める | Factory |
-| イベントに複数処理を反応させる | Observer |
 
 <!--
 話すこと:
@@ -139,18 +138,32 @@ Adapter を作る前に、次を確認する。
 複雑なサブシステムに単純な入口を提供する。
 
 ```ts
-type BillingFacade = (command: IssueInvoiceCommand) => Promise<Invoice>
+type BillingSummary = {
+  invoice: Invoice
+  contract: Contract
+  latestPayment: Payment | null
+}
 
-const createBillingFacade =
-  (deps: { issueInvoice: IssueInvoice; sendInvoiceMail: SendInvoiceMail }): BillingFacade =>
-  async (command) => {
-    const invoice = await deps.issueInvoice(command)
-    await deps.sendInvoiceMail(invoice.id)
-    return invoice
+type BillingReadFacade = (invoiceId: InvoiceId) => Promise<BillingSummary | null>
+
+const createBillingReadFacade =
+  (deps: {
+    invoices: InvoiceQuery
+    contracts: ContractQuery
+    payments: PaymentQuery
+  }): BillingReadFacade =>
+  async (invoiceId) => {
+    const invoice = await deps.invoices.findById(invoiceId)
+    if (!invoice) return null
+
+    const contract = await deps.contracts.findById(invoice.contractId)
+    const latestPayment = await deps.payments.findLatestByInvoice(invoiceId)
+
+    return { invoice, contract, latestPayment }
   }
 ```
 
-便利な入口と、責務の集中は紙一重。
+呼び出し側に、複数の低水準 Query API を意識させない。
 
 <!--
 話すこと:
@@ -223,6 +236,15 @@ const createInvoice = (command: IssueInvoiceCommand): Invoice => ({
 
 生成方法と初期不変条件を隠す。
 
+ただし、単にオブジェクトを返す関数すべてを Factory と呼ぶわけではない。
+
+Factory と呼ぶ理由:
+
+- 生成条件が複雑
+- 実装型を隠す
+- 不変条件を保証する
+- 入力に応じて適切な実装を選ぶ
+
 <!--
 話すこと:
 - 表は上から読むだけでなく、横に比べる。何が違うからコストや適用場面が変わるのかを見る。
@@ -231,15 +253,18 @@ const createInvoice = (command: IssueInvoiceCommand): Invoice => ({
 -->
 ---
 
-## Observer
+## Hexagonal Adapter と GoF Adapter
 
-```ts
-eventBus.subscribe("InvoiceIssued", sendEmail)
-eventBus.subscribe("InvoiceIssued", updateAccounting)
-eventBus.subscribe("InvoiceIssued", recordAnalytics)
-```
+第7回でも Adapter という言葉を使った。
 
-あるイベントに複数の処理を反応させる。
+同じ単語だが、見ているスコープが少し違う。
+
+| 言葉 | 見ているもの |
+|---|---|
+| GoF Adapter | あるインターフェースを、別のインターフェースへ合わせる局所パターン |
+| Hexagonal Adapter | アプリの Port と外部技術を接続する境界の部品 |
+
+Hexagonal Adapter の中では、GoF Adapter 的な変換がよく起きる。
 
 <!--
 話すこと:
@@ -257,7 +282,6 @@ eventBus.subscribe("InvoiceIssued", recordAnalytics)
 | Facade | 複雑な処理に安定した入口が必要 | God Service 化 |
 | Decorator | 横断的な処理を足す | 実行順序が見えにくい |
 | Factory | 生成ルールが重要 | 単純なオブジェクト生成の置換だけなら不要 |
-| Observer | 複数の反応を分離 | 追跡困難性 |
 
 <!--
 話すこと:
@@ -315,13 +339,16 @@ const withLogging = (gateway: PaymentGateway): PaymentGateway => ({
 |---|---|
 | `createStripePaymentGateway` | Adapter |
 | `withLogging` | Decorator |
-| `create...` という生成関数 | Factory 的な役割 |
+| `createStripePaymentGateway` | Factory function としても読める |
 
 読み方:
 
 - Adapter は外部ライブラリの形を自分たちの境界に合わせる
 - Decorator は元の処理を包んでログなどを足す
-- Factory は作り方の詳細を呼び出し側から隠す
+- Factory は作り方の詳細や初期条件を呼び出し側から隠す
+
+ただし、`create...` という名前だけでは Factory とは判断しない。
+この例では Stripe の client を閉じ込め、`PaymentGateway` を返しているため Factory function として説明できる。
 
 デザインパターンは、既存コードを説明する語彙としても使える。
 
@@ -343,7 +370,6 @@ const withLogging = (gateway: PaymentGateway): PaymentGateway => ({
 | Facade | 複雑な処理に安定した入口が必要 |
 | Decorator | ログ、計測、キャッシュを外側から足したい |
 | Factory | 生成ルールを呼び出し側から隠したい |
-| Observer | 起きたことに複数処理を反応させたい |
 
 次回は、コード内の境界からプロセス境界、サービス境界へ視野を広げる。
 

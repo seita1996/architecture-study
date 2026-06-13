@@ -64,14 +64,14 @@ BASE_PATH=/architecture-study/ pnpm build:pages
 | 1 | アーキテクチャとデザインパターンの地図 | 原則、アーキテクチャ、パターン、実装技術を区別できるか |
 | 2 | 高凝集・疎結合と変更容易性 | 共通化は本当に変更容易性を上げているか |
 | 3 | SOLID と依存関係 | 関数型の抽象はいつ境界として意味を持つか |
-| 4 | Layered Architecture、N-tier、MVC | レイヤー分割は何を明確にし、何を分散させるか |
+| 4 | Layered Architecture、N-tier、Package by Layer | レイヤー分割と配置の違いは何か |
 | 5 | Transaction Script、Service Layer、Domain Model | 業務ロジックをどこに置くべきか |
 | 6 | Active Record、Data Mapper、Repository、Unit of Work | 永続化の抽象化は何を隠しているか |
 | 7 | Hexagonal、Onion、Clean Architecture | 依存方向を内側へ向けるとはどういうことか |
 | 8 | Vertical Slice Architecture と Package by Feature | 機能単位の凝集はレイヤー分割とどう違うか |
 | 9 | GoF デザインパターン前編 | Strategy、State、Command はいつ効くか |
-| 10 | GoF デザインパターン後編 | Adapter、Facade、Decorator、Factory、Observer は既存コードをどう説明するか |
-| 11 | モジュラーモノリス、マイクロサービス、イベント駆動 | プロセス境界を増やすと何が難しくなるか |
+| 10 | GoF デザインパターン後編 | Adapter、Facade、Decorator、Factory は既存コードをどう説明するか |
+| 11 | モジュラーモノリス、マイクロサービス、イベント駆動 | デプロイ境界と連携方式をどう分けて考えるか |
 | 12 | CQRS、Event Sourcing、最終設計比較 | 現在の構成を ADR として説明できるか |
 
 ## ディレクトリ構成

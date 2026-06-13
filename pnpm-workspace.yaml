@@ -1,6 +1,9 @@
 packages:
   - .
 
+allowBuilds:
+  playwright-chromium: false
+
 minimumReleaseAge: 0
 
 neverBuiltDependencies:

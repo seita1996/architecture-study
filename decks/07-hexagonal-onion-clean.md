@@ -128,17 +128,22 @@ Hexagonal、Onion、Clean を別々の宗派として覚えない。
 
 ## Port と Adapter をゆっくり見る
 
-Port は「内側が必要としている境界」。
+Port は「アプリケーションと外部との目的を持った対話」を表す境界。
 
 Adapter は「外側の技術を、その境界に合わせるもの」。
 
 例:
 
 ```ts
+type IssueInvoice = (command: IssueInvoiceCommand) => Promise<IssueInvoiceResult>
+
 type PaymentGateway = (input: ChargePayment) => Promise<ChargeResult>
 ```
 
-これは Stripe の型ではなく、アプリが必要としている支払い境界。
+`IssueInvoice` は外部からアプリへ入る Input Port。
+`PaymentGateway` はアプリから外部へ出る Output Port。
+
+どちらも Stripe や Hono の型ではなく、アプリが必要としている対話を表す。
 
 <!--
 話すこと:
@@ -151,19 +156,21 @@ type PaymentGateway = (input: ChargePayment) => Promise<ChargeResult>
 ## Hexagonal Architecture
 
 ```txt
-HTTP Adapter
-    |
-    v
-Input Port -> Application
-                 |
-                 v
-             Output Port
-                 |
-                 v
-          Postgres Adapter
+実行時の呼び出し:
+
+HTTP Adapter -> Input Port -> Application -> Output Port -> Postgres Adapter
+
+コード上の import 依存:
+
+HTTP Adapter -------> Input Port
+Application --------> Output Port
+Postgres Adapter ---> Output Port
 ```
 
 外部から来るもの、外部へ出るものを Adapter として扱う。
+
+Output Port から Postgres Adapter へ import するわけではない。
+外側の Adapter が、内側で定義された Port に適合する。
 
 <!--
 話すこと:
@@ -183,6 +190,10 @@ Enterprise Business Rules
 ```
 
 内側ほど安定したルール。外側ほど技術詳細。
+
+Onion Architecture も同じ問題意識を持つ。
+中心に Domain Model を置き、その外側に Application Services、さらに外側に Infrastructure を置く。
+違いを暗記するより、「何を中心に守りたいか」を見る。
 
 <!--
 話すこと:
@@ -240,6 +251,7 @@ export const createStripePaymentGateway =
 
 ```txt
 routes/invoice-route.ts
+features/issue-invoice/issue-invoice-port.ts
 features/issue-invoice/issue-invoice.ts
 features/issue-invoice/invoice.ts
 features/issue-invoice/ports.ts
@@ -270,7 +282,8 @@ main.ts
 | ファイル | 役割 |
 |---|---|
 | `routes/invoice-route.ts` | Input Adapter |
-| `issue-invoice.ts` | Application / Input Port の実体 |
+| `issue-invoice-port.ts` | Input Port |
+| `issue-invoice.ts` | Application Service / Use Case 実装 |
 | `invoice.ts` | Domain |
 | `ports.ts` | Output Port |
 | `prisma-invoice-repository.ts` | Output Adapter |
