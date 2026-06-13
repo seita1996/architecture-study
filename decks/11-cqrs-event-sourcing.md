@@ -40,11 +40,11 @@ title: "第11回: CQRSとEvent Sourcing"
 | Core | Event Sourcing は監査ログではない |
 | Core | 採用条件と採用コスト |
 | Supplementary | Projection、Snapshot、Replay、optimistic concurrency |
-| Advanced | Schema進化、再構築運用、外部副作用 |
 
 <!--
 話すこと:
-- 60分を推奨する。Core は判断に使える深さまで、Supplementary は目的と主なコストまで、Advanced は別途学習が必要な領域として扱う。
+- 60分を推奨する。Core は判断に使える深さまで、Supplementary は目的と主なコストまでに留める。
+- Schema進化、再構築運用、外部副作用は別勉強会や参考資料の範囲として扱う。
 -->
 ---
 
@@ -241,11 +241,17 @@ Event Sourcing Decision:
 Driver / Priority:
 最も重視した読み取り、履歴、再構築要求
 
-Trade-offs:
-モデル同期、Projection、Replay、運用コスト
+CQRS Trade-offs:
+Read Model同期、遅延、再構築、運用コスト
 
-Unknown:
-許容遅延、データ量、再構築要件、チームの運用能力
+Event Sourcing Trade-offs:
+Schema進化、Replay、Projection、Snapshot、競合制御
+
+CQRS Unknown:
+許容遅延、読み取り負荷、検索要件
+
+Event Sourcing Unknown:
+再構築要件、イベント保持期間、チームの運用能力
 ```
 
 <!--

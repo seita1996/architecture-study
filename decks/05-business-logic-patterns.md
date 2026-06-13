@@ -179,7 +179,7 @@ type Money = {
 
 declare const createMoney: (
   amountInMinorUnits: number,
-  currency: Currency,
+  currency: string,
 ) => Result<Money, InvalidMoney>
 
 type Invoice =
@@ -429,7 +429,7 @@ type Money = {
 
 declare const createMoney: (
   amountInMinorUnits: number,
-  currency: Currency,
+  currency: string,
 ) => Result<Money, InvalidMoney>
 
 type Invoice =

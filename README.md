@@ -132,9 +132,8 @@ architecture-study/
 |---|---|
 | Core | 判断に使えるところまで理解する |
 | Supplementary | 存在、目的、主なコストを知る |
-| Advanced | 実装や運用には別途学習が必要 |
 
-Advanced は該当する回だけで扱います。例えば、Event schema evolution、Replay時の副作用制御、exactly-onceの適用範囲、Saga、分散トレーシング、複雑なtransaction isolationなどです。
+Schema evolution、Replay時の副作用制御、exactly-onceの適用範囲、Saga、分散トレーシング、複雑なtransaction isolationなどは、別勉強会や参考資料の範囲として扱います。
 
 演習は長いグループワークにはしません。ただし、考えた内容は必ず外部化します。
 

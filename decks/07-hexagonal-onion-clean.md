@@ -277,8 +277,18 @@ main.ts
 依存関係の一部:
 
 ```ts
+type InvoiceId = string
+type IssueInvoiceInput = { invoiceId: InvoiceId }
+type IssueInvoiceResult =
+  | { type: "issued"; invoice: IssuedInvoice }
+  | { type: "not_found" }
+type InvoiceRow = { id: string; status: string }
+
 // routes/invoice-route.ts
 import type { IssueInvoice } from "../features/issue-invoice/issue-invoice-port"
+declare const parseIssueInvoiceRequest: (request: Request) => Promise<IssueInvoiceInput>
+declare const toHttpResponse: (result: IssueInvoiceResult) => Response
+
 export const createInvoiceRoute =
   (issueInvoice: IssueInvoice) =>
   async (request: Request): Promise<Response> => {
@@ -287,33 +297,66 @@ export const createInvoiceRoute =
     return toHttpResponse(result)
   }
 
+// issue-invoice-port.ts
+export type IssueInvoice = (
+  input: IssueInvoiceInput,
+) => Promise<IssueInvoiceResult>
+
 // issue-invoice.ts
 import type { InvoiceRepository } from "./ports"
 export const createIssueInvoice = (deps: {
   invoices: InvoiceRepository
 }): IssueInvoice => async (input) => {
-  // deps.invoices を使ってユースケースを進める
+  const invoice = await deps.invoices.findById(input.invoiceId)
+  if (!invoice) return { type: "not_found" }
+
+  const issued = issueDraftInvoice(invoice)
+  await deps.invoices.save(issued)
+  return { type: "issued", invoice: issued }
 }
 
 // invoice.ts
-export type Invoice = {
+export type DraftInvoice = {
   id: InvoiceId
-  status: "draft" | "issued"
+  status: "draft"
 }
-export const issueInvoice = (invoice: Invoice): Invoice => ({
+export type IssuedInvoice = {
+  id: InvoiceId
+  status: "issued"
+}
+export type Invoice = DraftInvoice | IssuedInvoice
+export const issueDraftInvoice = (invoice: DraftInvoice): IssuedInvoice => ({
   ...invoice,
   status: "issued",
 })
 
+// ports.ts
+export type InvoiceRepository = {
+  findById: (id: InvoiceId) => Promise<DraftInvoice | null>
+  save: (invoice: IssuedInvoice) => Promise<void>
+}
+
 // prisma-invoice-repository.ts
 import type { InvoiceRepository } from "./ports"
+declare const toDraftInvoice: (row: InvoiceRow) => DraftInvoice
+declare const toInvoiceRow: (invoice: IssuedInvoice) => InvoiceRow
+
 export const createPrismaInvoiceRepository =
   (prisma: PrismaClient): InvoiceRepository => ({
-    // Prisma を InvoiceRepository の契約へ合わせる
+    findById: async (id) => {
+      const row = await prisma.invoice.findUnique({ where: { id } })
+      return row ? toDraftInvoice(row) : null
+    },
+    save: async (invoice) => {
+      await prisma.invoice.update({
+        where: { id: invoice.id },
+        data: toInvoiceRow(invoice),
+      })
+    },
   })
 
 // main.ts
-const issueInvoice = createIssueInvoice({
+const issueInvoiceUseCase = createIssueInvoice({
   invoices: createPrismaInvoiceRepository(prisma),
 })
 ```
