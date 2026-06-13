@@ -217,7 +217,7 @@ export const createStripePaymentGateway =
   async (input) => {
     try {
       const result = await stripe.paymentIntents.create({
-        amount: input.amount.value,
+        amount: toProviderMinorUnit(input.amount),
         currency: input.amount.currency,
       })
 
@@ -234,6 +234,7 @@ export const createStripePaymentGateway =
 ユースケースは Stripe ではなく、支払いという出力ポートに依存する。
 Stripe の例外やエラーコードは Adapter の中で、アプリケーションの失敗型へ変換する。
 プログラミングエラーまで業務エラーに変換しないよう、期待した外部エラーだけを変換する。
+`toProviderMinorUnit` は、業務上の `Money` を Stripe が要求する最小通貨単位の整数へ変換する境界処理。
 
 <!--
 話すこと:

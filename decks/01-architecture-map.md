@@ -324,15 +324,14 @@ const issueInvoice =
 |---|---|
 | コード配置 | 技術責務、機能、ユースケースのどれで近づけるか |
 | 変更境界 | end-to-end な Slice として扱うか |
-| 依存境界 | Direct Dependency、Ports and Adapters |
-| 業務ロジック | Transaction Script、Domain Model |
+| 依存境界 | 外部詳細をどこで変換するか |
+| 業務ロジック | 手続きとして書くか、業務モデルへ寄せるか |
 | 永続化 | ORM 詳細をどこまで見せるか |
 | 一貫性 | transaction、制約、冪等性をどう使うか |
-| 読み書き | モデルを共有するか分離するか |
-| メッセージ意味 | Command、Event |
-| 応答 | Sync、Async |
+| 読み書き | Write Model と Read Model を共有するか、意図的に分離するか |
+| メッセージ意味 | やってほしい作業か、起きた事実か |
+| 応答 | 呼び出し元が最終処理完了を待つか |
 | 実行・デプロイ・所有 | 何を独立させるか |
-| 読み書き | Shared Model、CQRS |
 
 後半の回では、この軸を一つずつ見ていく。
 

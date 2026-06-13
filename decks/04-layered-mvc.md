@@ -295,7 +295,7 @@ Layered と Hexagonal は必ずしも排他的な選択肢ではない。
 
 ## 個人ワーク: 変更はどこに散らばるか
 
-Layered な構成で「請求書発行に承認フローを追加する」場合を考える。
+Package by Layer で配置された Layered Architecture に、「請求書発行に承認フローを追加する」場合を考える。
 
 ```txt
 controllers/invoice-controller.ts

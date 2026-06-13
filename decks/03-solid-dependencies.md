@@ -250,20 +250,13 @@ type InvoiceDependencies = {
   deleteInvoice: (invoiceId: string) => Promise<void>
 }
 
-declare const decideInvoiceCancellation:
-  (invoice: Invoice) => CancelInvoiceDecision
-
 const cancelInvoice =
   (deps: InvoiceDependencies) =>
-  async (invoiceId: string): Promise<CancelInvoiceResult> => {
+  async (invoiceId: string): Promise<void> => {
     const invoice = await deps.findInvoice(invoiceId)
-    if (!invoice) return { type: "not_found" }
-    // 状態遷移の詳細は第5回で扱う
-    const decision = decideInvoiceCancellation(invoice)
-    if (decision.type === "cancelled") {
-      await deps.saveInvoice(decision.invoice)
-    }
-    return decision
+    if (!invoice) return
+
+    await deps.saveInvoice(invoice)
   }
 ```
 
@@ -286,20 +279,13 @@ type CancelInvoiceDependencies = {
   saveInvoice: (invoice: Invoice) => Promise<void>
 }
 
-declare const decideInvoiceCancellation:
-  (invoice: Invoice) => CancelInvoiceDecision
-
 const cancelInvoice =
   (deps: CancelInvoiceDependencies) =>
-  async (invoiceId: string): Promise<CancelInvoiceResult> => {
+  async (invoiceId: string): Promise<void> => {
     const invoice = await deps.findInvoice(invoiceId)
-    if (!invoice) return { type: "not_found" }
-    // 状態遷移の詳細は第5回で扱う
-    const decision = decideInvoiceCancellation(invoice)
-    if (decision.type === "cancelled") {
-      await deps.saveInvoice(decision.invoice)
-    }
-    return decision
+    if (!invoice) return
+
+    await deps.saveInvoice(invoice)
   }
 ```
 

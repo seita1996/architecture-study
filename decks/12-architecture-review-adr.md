@@ -77,13 +77,12 @@ title: "第12回: 実プロダクト設計レビューとADR"
 | transactionの実装 | ORM API、Transaction Runner、宣言的管理のどれを使うか |
 | 変更追跡 | 明示保存か、Change Tracking を利用するか |
 | 応答方式 | 呼び出し元が最終処理完了を待つか |
-| 呼び出し境界 | プロセス内か、ネットワーク越しか |
+| 実行配置 | 同一プロセスか、別プロセスか |
 | 通信方式 | HTTP/RPCか、Messagingか |
 | 配信形態 | Point-to-pointか、Publish-subscribeか |
 | インフラ | どの Broker / Queue service を使うか |
 | Message semantics | Command か Event か |
 | Delivery semantics | at-most-once / at-least-once をどう扱うか |
-| 実行境界 | 同一プロセスか、別プロセスか |
 | デプロイ境界 | 同時リリースか、独立リリースか |
 | データ所有境界 | 誰が書き込み責任を持つか |
 | サービス境界 | 独立した契約と運用責任を持つか |
@@ -223,16 +222,16 @@ ADR は、その中の重要な一つの判断を記録するもの。
 -->
 ---
 
-## レビューで見る設計軸
+## レビューで見る領域
 
-| 軸 | 確認すること |
+| 領域 | 確認すること |
 |---|---|
 | コード配置 | 変更単位と配置が合っているか |
 | 依存境界 | 外部技術や失敗契約をどこで変換しているか |
 | 業務ロジック | Transaction Script / Domain Model のどちらが複雑さに合うか |
-| データアクセス | ORM直接、Query、Repository、Mapper のどれが必要か |
+| 永続化 | Write側永続化、Read側取得、Read側モデル、Mapper を混同していないか |
 | 一貫性 | transaction、unique constraint、冪等性が必要か |
-| メッセージング | Command / Event、Sync / Async、Queue / Broker を混同していないか |
+| メッセージング | Message semantics、応答方式、通信方式、配信形態を混同していないか |
 | 読み書き | CQRS が必要なほどモデルやスケールが違うか |
 | セキュリティ | 自力で解決しきれない論点を専門レビューへ渡せるか |
 
@@ -286,7 +285,7 @@ Review Conditions:
 | 項目 | 2点の状態 |
 |---|---|
 | 問題設定 | 解決したい問題を具体化できる |
-| Driver | 要求、品質特性、制約を列挙できる |
+| Driver | 要求、品質特性、制約を具体的なシナリオ、優先順位、判断材料として表現できる |
 | スコープ | コード、モジュール、プロセス、デプロイを区別できる |
 | 設計軸 | 異なる軸のパターンを混同しない |
 | 代替案 | 最低2案を出せる |

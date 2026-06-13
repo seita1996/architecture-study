@@ -149,6 +149,9 @@ Unknown:
 第12回や事前課題では、次の完全版を使います。
 
 ```txt
+Target:
+どの機能、変更、処理か
+
 Drivers:
 要求、品質特性、制約
 
@@ -161,8 +164,20 @@ Evidence / Measure:
 Relevant axes:
 今回関係する設計軸だけ選ぶ
 
+Current design:
+選んだ軸について、現在の依存、データ、transaction、外部I/O
+
+Security:
+権限、テナント境界、機密情報、監査など、専門レビューが必要な論点
+
+Problems:
+どの変更や障害が難しいか
+
 Alternatives:
 比較した案
+
+Decision:
+どの案を選ぶか
 
 Trade-offs:
 得るものと失うもの
