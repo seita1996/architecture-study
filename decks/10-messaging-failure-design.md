@@ -376,7 +376,7 @@ mail API
 
 両者に共通するのは、業務更新と「後で実行すべきこと」を同じDB transactionで記録すること。
 WorkerがDB行を直接処理するなら Transactional Job Queue。
-Relayが integration message を broker へ送るなら Transactional Outbox。
+Relayが、別プロセスや別サービスへ公開するmessageをbrokerへ送るなら Transactional Outbox。
 守りたいFailure modeは近いが、契約、再処理、監視、運用構造は異なる。
 
 この教材では議論を分けるため、上の呼び方で区別する。
@@ -403,6 +403,14 @@ Relayが integration message を broker へ送るなら Transactional Outbox。
 | ConsumerのDB内更新 | Inbox / processed-message と業務更新を同一 transaction で扱う |
 | 外部API冪等性 | プロバイダーが Idempotency Key を持つなら、`invoiceId + notificationType` などの業務キーを渡す |
 | Idempotency Key がない外部API | 送信状態、再送ポリシー、重複許容性、手動修復を設計する |
+
+atomic claim:
+複数Workerが同じJobを同時取得しないよう、`pending` から `processing` への更新と取得を原子的に行う。
+
+lease:
+Workerが一定時間だけJobの処理権を持つ。
+Worker停止時は期限後に別Workerが再処理できる。
+lease切れ後の再処理では、同じ外部副作用が再実行される可能性がある。
 
 非同期にする理由は「先進的だから」ではない。
 失敗時に再試行でき、画面応答と切り離せるから。

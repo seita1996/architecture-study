@@ -433,6 +433,7 @@ const invoiceRoute = createInvoiceRoute(issueInvoiceUseCase)
 - Prisma に合わせているものは何か
 - 依存を組み立てる場所はどこか
 - どのファイルが型を満たし、どの方向に import しているか
+- DB障害や競合は、どの境界でアプリケーションの失敗型へ変換するか
 
 次の形式で短く書く。
 
