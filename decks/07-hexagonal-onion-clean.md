@@ -341,6 +341,8 @@ export type IssueInvoicePersistence = {
 
 この例では並行実行制御を省略している。
 PortやDomain Modelだけでは二重発行を防げない。
+DB障害や保存時の競合も省略している。
+実際のPortでは、保存成功、競合、一時的障害を区別する。
 
 <!--
 話すこと:
@@ -348,7 +350,7 @@ PortやDomain Modelだけでは二重発行を防げない。
 - Application ServiceはPortの型を満たし、Domain関数とOutput Portを使う。
 - `IssueInvoicePersistence` は汎用Repositoryではなく、請求書発行ユースケース専用のOutput Port。Portは目的ある対話を表す。
 - 全状態を返し、Application Serviceで「存在しない」と「状態が不適切」を分ける。
-- このコードでは並行発行の制御を省略している。実際にはversion付き条件更新、`WHERE status = 'draft'` による conditional update、transaction、冪等性キーなどを検討する。Portを置くだけでは整合性は守れない。
+- このコードでは並行発行の制御と、DB障害・保存時競合の失敗契約を省略している。実際にはversion付き条件更新、`WHERE status = 'draft'` による conditional update、transaction、冪等性キー、`saved / conflict / temporarily_unavailable` のような結果型を検討する。Portを置くだけでは整合性は守れない。
 - 小規模ではDomain型をInput Portの結果として返してもよいが、外部契約を安定させたい場合はApplication DTOへ変換する。
 -->
 ---

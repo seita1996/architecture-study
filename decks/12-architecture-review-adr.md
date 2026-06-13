@@ -129,7 +129,7 @@ Driver と問題に関係する軸だけを選び、判断する。
 ## ADR に残す項目
 
 ```md
-# ADR: 請求書発行後のメール送信要求をTransactional Outboxへ記録する
+# ADR: 請求書更新とメール送信要求を同一DB transactionで永続化する
 
 ## Status
 Proposed / Accepted / Superseded
@@ -249,7 +249,7 @@ ADR は、その中の重要な一つの判断を記録するもの。
 
 - 請求書発行コードをユースケース単位に配置する
 - メールAPIを Output Port の外へ隔離する
-- 発行後メールを Transactional Outbox で送る
+- 請求書更新とメール送信要求を同一DB transactionで永続化する
 - 現時点では CQRS を採用しない
 
 変更理由と見直し条件が違うなら、ADR も分ける。
@@ -270,7 +270,8 @@ ADR は、その中の重要な一つの判断を記録するもの。
 | 業務ロジック | Transaction Script / Domain Model のどちらが複雑さに合うか |
 | 永続化 | Write側永続化、Read側取得、Read側モデル、Mapper を混同していないか |
 | 一貫性 | transaction、unique constraint、冪等性が必要か |
-| メッセージング | Message semantics、応答方式、連携方式、配信形態を混同していないか |
+| メッセージング | Message semantics、応答方式、連携方式、配信形態、Delivery semantics を混同していないか |
+| モジュール・所有境界 | 不変条件、データ書き込み責任、デプロイ、運用責任の境界が明確か |
 | 読み書き | CQRS が必要なほどモデルやスケールが違うか |
 | 性能・容量 | 主要シナリオのレイテンシ、スループット、データ量を満たせるか |
 | 可用性・回復 | どの障害まで継続し、どう再試行・復旧するか |
@@ -300,7 +301,7 @@ Owners:
   Invoice team
 
 Decision:
-  請求書発行後のメール送信要求は Transactional Outbox へ記録する。
+  請求書更新とメール送信要求を同一DB transactionで永続化する。
 
 Context:
   メールAPIは一社固定だがタイムアウトが多い。
@@ -311,12 +312,12 @@ Reason / Rationale:
   メール送信自体は遅れてもよく、失敗時に再試行したい。
 
 Consequences / Trade-offs:
-  Outbox worker、再送監視、冪等Handlerが必要になる。
+  後続処理のworker、再送監視、冪等な処理が必要になる。
 
 Decision Rules / Constraints:
-  請求書保存とOutbox message保存は同じDB transactionに含める。
+  請求書保存とメール送信要求の保存は同じDB transactionに含める。
   外部メールAPI呼び出しはDB transaction内で行わない。
-  Command/Eventの選択はこのADRでは固定せず、別ADRまたはmessage contractで決める。
+  Job Queue / Outbox Relay の選択と、Command/Eventの選択はこのADRでは固定しない。
 
 Review Conditions:
   メール送信が同期応答に必須になったら、状態管理と補償を再検討する。
@@ -329,6 +330,7 @@ Related Decisions:
   ADR: 請求書発行コードをユースケース単位に配置する。
 
 Follow-up Decisions:
+  後続処理をTransactional Job Queueにするか、Outbox Relay + Brokerにするか。
   メール通知をCommand Messageにするか、InvoiceIssued Eventにするか。
 ```
 
@@ -374,7 +376,7 @@ N/Aは点数計算から除外する。
 |---|---|
 | 問題設定 | 解決したい問題を具体化できる |
 | Driver | 要求、品質特性、制約を具体的なシナリオ、優先順位、判断材料として表現できる |
-| スコープ | コード、モジュール、プロセス、デプロイを区別できる |
+| スコープ | コード、モジュール、プロセス、デプロイ、データ所有、チーム所有のうち、問題に関係するスコープを区別できる |
 | 設計軸 | 異なる軸のパターンを混同しない |
 | 代替案 | 最低2案を出せる |
 | Trade-off | 利点とコストを両方説明できる |
