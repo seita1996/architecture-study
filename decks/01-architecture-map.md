@@ -389,8 +389,14 @@ Infrastructure -> Application / Domain contracts
 
 ```txt
 Hexagonal:
-Adapter -> Port -> Application / Domain
-Adapter implements Port
+Runtime:
+HTTP Adapter -> Application Service -> Repository Adapter
+
+Contracts:
+HTTP Adapter -------------> Input Port
+Application Service -----> satisfies Input Port
+Application Service -----> Output Port
+Repository Adapter ------> satisfies Output Port
 ```
 
 コード配置は別軸で見る。

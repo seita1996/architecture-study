@@ -35,15 +35,16 @@ title: "第11回: CQRSとEvent Sourcing"
 
 | 区分 | 扱う内容 |
 |---|---|
-| 主役 | CQS / CQRS |
-| 主役 | CQRS は別DB必須ではない |
-| 主役 | Event Sourcing は監査ログではない |
-| 主役 | 採用コストが高い |
-| 補足 | Projection、Snapshot、Replay、optimistic concurrency の詳細 |
+| Core | CQS / CQRS |
+| Core | CQRS は別DB必須ではない |
+| Core | Event Sourcing は監査ログではない |
+| Core | 採用条件と採用コスト |
+| Supplementary | Projection、Snapshot、Replay、optimistic concurrency |
+| Advanced | Schema進化、再構築運用、外部副作用 |
 
 <!--
 話すこと:
-- 30分なので実装詳細ではなく、採用判断に必要な言葉を揃える。
+- 60分を推奨する。Core は判断に使える深さまで、Supplementary は目的と主なコストまで、Advanced は別途学習が必要な領域として扱う。
 -->
 ---
 
@@ -227,6 +228,22 @@ Event Sourcing は、モデル化した状態変化を追跡できる。
 - CQRS が必要か
 - Event Sourcing が必要か
 - 監査ログだけでよいか
+
+次の形式で短く書く。
+
+```txt
+Decision:
+CQRSなし / CQRSを検討 / Event Sourcingを検討 / 追加調査
+
+Driver / Priority:
+最も重視した読み書き、監査、履歴、運用上の条件
+
+Trade-offs:
+得るものと増えるコスト
+
+Unknown:
+判断に足りない情報
+```
 
 <!--
 話すこと:

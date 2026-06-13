@@ -34,35 +34,38 @@ Command / Event、同期 / 非同期、Retry、Outbox を分けて考える
 - Outbox が解く失敗シナリオを説明できる
 - at-least-once と冪等性の関係を説明できる
 
-30分版では、Point-to-point / Publish-subscribe、DLQ、exactly-once、Inbox、外部副作用の厳密な限界は補足として扱う。
+この回は60分を推奨する。
+Core は判断に使えるところまで扱い、Supplementary は目的と主なコストを押さえる。
 
 | 区分 | 扱う内容 |
 |---|---|
-| 主役 | Command / Event |
-| 主役 | Sync / Async |
-| 主役 | Outbox が解く片成功 |
-| 主役 | at-least-once |
-| 主役 | 冪等性 |
-| 補足 | GoF Command、Inbox、DLQ運用、exactly-once、外部副作用の厳密な限界 |
+| Core | Command / Event |
+| Core | Sync / Async |
+| Core | Outbox が解く片成功 |
+| Core | at-least-once |
+| Core | 冪等性 |
+| Supplementary | GoF Command、Inbox、DLQ運用、exactly-once、外部副作用の厳密な限界 |
 
 <!--
 話すこと:
 - 用語一覧で終わらせず、請求書発行とメール送信の失敗を題材にする。
-- 30分版の主役は Command/Event、Sync/Async、Outbox、at-least-once、冪等性に絞る。
+- Core は Command/Event、Sync/Async、Outbox、at-least-once、冪等性。Supplementary は実装や運用の深追いを避け、何が追加コストになるかに留める。
 -->
 ---
 
 ## 軸を分ける
 
-| 軸 | 選択肢 |
+| 軸 | 問い |
 |---|---|
-| メッセージの意味 | Command / Event |
-| 応答 | Synchronous / Asynchronous |
-| 配信形態 | Point-to-point / Publish-subscribe |
-| 実装 | Function call / HTTP / Queue / Broker |
-| 整合性 | Immediate / Eventual |
+| Message semantics | Command か Event か |
+| 応答方式 | 呼び出し元が最終処理完了を待つか |
+| 実行境界 | 同一プロセスか、別プロセスか |
+| 通信方式 | HTTP/RPC か、Messaging か |
+| 配信形態 | Point-to-point か、Publish-subscribe か |
+| インフラ | どの Broker / Queue service を使うか |
+| 整合性 | Immediate か、Eventual か |
 
-`Queue` は実装手段。
+`Queue` や `Broker` はインフラや配送手段。
 `Event` は「何が起きたか」を表すメッセージの意味。
 
 <!--

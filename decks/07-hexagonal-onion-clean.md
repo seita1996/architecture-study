@@ -123,7 +123,7 @@ Hexagonal、Onion、Clean を別々の宗派として覚えない。
 
 <!--
 話すこと:
-- この回の主役はPortとAdapter。Hexagonal、Onion、Cleanの細かい比較に時間を使いすぎない。
+- この回の Core は Port と Adapter。Hexagonal、Onion、Cleanの細かい比較に時間を使いすぎない。
 - 近縁だが同義ではない、という理解に留める。
 -->
 ---
@@ -275,6 +275,33 @@ features/issue-invoice/prisma-invoice-repository.ts
 main.ts
 ```
 
+依存関係の一部:
+
+```ts
+// routes/invoice-route.ts
+import type { IssueInvoice } from "../features/issue-invoice/issue-invoice-port"
+
+// issue-invoice.ts
+import type { InvoiceRepository } from "./ports"
+export const createIssueInvoice = (deps: {
+  invoices: InvoiceRepository
+}): IssueInvoice => async (input) => {
+  // deps.invoices を使ってユースケースを進める
+}
+
+// prisma-invoice-repository.ts
+import type { InvoiceRepository } from "./ports"
+export const createPrismaInvoiceRepository =
+  (prisma: PrismaClient): InvoiceRepository => ({
+    // Prisma を InvoiceRepository の契約へ合わせる
+  })
+
+// main.ts
+const issueInvoice = createIssueInvoice({
+  invoices: createPrismaInvoiceRepository(prisma),
+})
+```
+
 ヒント:
 
 - HTTP を受けるものは何か
@@ -282,6 +309,7 @@ main.ts
 - 業務ルールはどこか
 - Prisma に合わせているものは何か
 - 依存を組み立てる場所はどこか
+- どのファイルが型を満たし、どの方向に import しているか
 
 次の形式で短く書く。
 
