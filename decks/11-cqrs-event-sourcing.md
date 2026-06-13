@@ -33,6 +33,14 @@ title: "第11回: CQRSとEvent Sourcing"
 - Event Sourcing は監査ログそのものではないと説明できる
 - Projection、Snapshot、Optimistic concurrency のコストを知る
 
+| 区分 | 扱う内容 |
+|---|---|
+| 主役 | CQS / CQRS |
+| 主役 | CQRS は別DB必須ではない |
+| 主役 | Event Sourcing は監査ログではない |
+| 主役 | 採用コストが高い |
+| 補足 | Projection、Snapshot、Replay、optimistic concurrency の詳細 |
+
 <!--
 話すこと:
 - 30分なので実装詳細ではなく、採用判断に必要な言葉を揃える。

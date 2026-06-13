@@ -73,8 +73,9 @@ title: "第12回: 実プロダクト設計レビューとADR"
 | Read側取得 | ORMを直接使うか、専用Queryを置くか |
 | Read側モデル | Write Modelを使うか、専用Read Modelを持つか |
 | Mapper | DB型と業務型を分けるか |
-| transactionの所有者 | Use Case、request、framework のどこが境界を決めるか |
-| transactionの実装 | ORM API、Transaction Runner、宣言的管理のどれを使うか |
+| 整合性境界 | どのユースケース操作を原子的変更として扱うか |
+| transaction境界の決定者 | Application Service など、どの層が開始、終了を決めるか |
+| transaction実装方法 | ORM API、Transaction Runner、宣言的 transaction のどれを使うか |
 | 変更追跡 | 明示保存か、Change Tracking を利用するか |
 | 応答方式 | 呼び出し元が最終処理完了を待つか |
 | 実行配置 | 同一プロセスか、別プロセスか |

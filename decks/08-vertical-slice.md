@@ -250,8 +250,8 @@ Vertical Slice では、少しの重複を許すことがある。
 - Slice 間で依存する場合は、公開API、依存方向、循環依存、内部実装への依存、共有概念の所有者を見る
 - 共有 Domain は、同じ不変条件と変更理由を持ち、所有者が明確な場合に限って慎重に置く
 
-Decorator というパターン名は第10回以降で補足する。
-ここでは、元の処理を変えずに外側からログや計測を足す程度に捉える。
+Decorator というパターン名は今回は扱わない。
+ここでは、元の処理を変えずに外側からログや計測を足す「処理ラッパー」として捉える。
 
 <!--
 話すこと:
@@ -316,11 +316,14 @@ features/resend-invoice/invoice-mailer.ts
 Decision:
 Package by Layerを維持する / Package by Use Caseへ寄せる / 機能群単位のPackage by Featureにする / 追加情報が必要
 
-Drivers:
-重視した変更単位や制約
+Driver / Priority:
+最も重視した変更単位や制約
 
 Trade-offs:
 得るものと増えるコスト
+
+Unknown:
+判断に足りない情報
 ```
 
 <!--

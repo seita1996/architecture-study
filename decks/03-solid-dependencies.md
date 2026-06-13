@@ -250,14 +250,10 @@ type InvoiceDependencies = {
   deleteInvoice: (invoiceId: string) => Promise<void>
 }
 
-const cancelInvoice =
+// 取消判断の詳細は第5回で扱う
+declare const cancelInvoice:
   (deps: InvoiceDependencies) =>
-  async (invoiceId: string): Promise<void> => {
-    const invoice = await deps.findInvoice(invoiceId)
-    if (!invoice) return
-
-    await deps.saveInvoice(invoice)
-  }
+  (invoiceId: string) => Promise<void>
 ```
 
 取消処理は、メール送信、CSV出力、削除には依存していない。
@@ -279,14 +275,10 @@ type CancelInvoiceDependencies = {
   saveInvoice: (invoice: Invoice) => Promise<void>
 }
 
-const cancelInvoice =
+// 取消判断の詳細は第5回で扱う
+declare const cancelInvoice:
   (deps: CancelInvoiceDependencies) =>
-  async (invoiceId: string): Promise<void> => {
-    const invoice = await deps.findInvoice(invoiceId)
-    if (!invoice) return
-
-    await deps.saveInvoice(invoice)
-  }
+  (invoiceId: string) => Promise<void>
 ```
 
 契約は小さければよいのではない。
@@ -358,11 +350,14 @@ const createInvoice = async (
 Decision:
 境界を作る / 作らない / まだ判断しない
 
-Drivers:
-重視した要求や制約
+Driver / Priority:
+最も重視した要求や制約
 
 Trade-offs:
 得るものと増えるコスト
+
+Unknown:
+判断に足りない情報
 ```
 
 <!--

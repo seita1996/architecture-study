@@ -94,10 +94,6 @@ title: "第2回: 高凝集・疎結合と変更容易性"
 | 変更理由 | 同じ理由で変更されるものが近くにあるか |
 | 変更波及 | ある変更がどこまで広がるか |
 | 関心の分離 | 異なる関心が同じ場所に混ざっていないか |
-| 安定依存 | 変わりにくいものへ依存しているか |
-
-ここでの「安定」は、単に変更頻度が低いという意味ではない。
-他の要素から依存される責任を引き受けられる境界かを見る。
 
 <!--
 話すこと:
@@ -144,12 +140,10 @@ type StatusTransition = {
   to: WorkflowStatus
 }
 
-export const canTransition = (
+declare const canTransition: (
   target: "invoice" | "contract" | "subscription",
   transition: StatusTransition,
-): boolean => {
-  // すべての状態遷移を共通エンジンに集めた
-}
+) => boolean
 ```
 
 共通の状態型と遷移エンジンを作ると、重複は減る。
@@ -277,11 +271,14 @@ const canTransition = (
 Decision:
 共通化する / 分ける / 条件付き
 
-Drivers:
-重視した変更理由や制約
+Driver / Priority:
+最も重視した変更理由や制約
 
 Trade-offs:
 得るものと失うもの
+
+Unknown:
+判断に足りない情報
 ```
 
 <!--

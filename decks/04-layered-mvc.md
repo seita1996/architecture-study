@@ -323,11 +323,14 @@ tests/invoice-service.test.ts
 Decision:
 Package by Layerのままでよい / Package by Feature・Use Caseへ寄せる / 追加調査
 
-Drivers:
-重視した変更単位や制約
+Driver / Priority:
+最も重視した変更単位や制約
 
 Trade-offs:
 得るものと増えるコスト
+
+Unknown:
+判断に足りない情報
 ```
 
 <!--

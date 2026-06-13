@@ -302,6 +302,8 @@ await unitOfWork.commit()
 
 業務トランザクション中の変更を追跡し、まとめて永続化する。
 
+Change Tracking は、取得したオブジェクトの変更を ORM などが追跡し、commit 時に必要な更新を生成する仕組み。
+
 `prisma.$transaction(...)` の薄いラッパーは、トランザクション境界の抽象化ではあるが、それだけで Unit of Work とは呼ばない。
 
 <!--
@@ -412,11 +414,14 @@ const createInvoiceRepository = (prisma: PrismaClient): InvoiceRepository => ({
 Decision:
 Repositoryとして意味がある / 薄い / 追加情報が必要
 
-Drivers:
-何を隠したいと判断したか
+Driver / Priority:
+最も重視した隠したい詳細
 
 Trade-offs:
 得るものと増えるコスト
+
+Unknown:
+判断に足りない情報
 ```
 
 <!--

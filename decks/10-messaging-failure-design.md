@@ -36,6 +36,15 @@ Command / Event、同期 / 非同期、Retry、Outbox を分けて考える
 
 30分版では、Point-to-point / Publish-subscribe、DLQ、exactly-once、Inbox、外部副作用の厳密な限界は補足として扱う。
 
+| 区分 | 扱う内容 |
+|---|---|
+| 主役 | Command / Event |
+| 主役 | Sync / Async |
+| 主役 | Outbox が解く片成功 |
+| 主役 | at-least-once |
+| 主役 | 冪等性 |
+| 補足 | GoF Command、Inbox、DLQ運用、exactly-once、外部副作用の厳密な限界 |
+
 <!--
 話すこと:
 - 用語一覧で終わらせず、請求書発行とメール送信の失敗を題材にする。
@@ -281,11 +290,14 @@ Consumer 側では、`messageId` などを処理済みとして記録する Inbo
 Decision:
 同期処理 / Outbox + Queue / 追加調査
 
-Drivers:
-重視した失敗シナリオや要求
+Driver / Priority:
+最も重視した失敗シナリオや要求
 
 Trade-offs:
 得るものと増える運用コスト
+
+Unknown:
+判断に足りない情報
 ```
 
 <!--
