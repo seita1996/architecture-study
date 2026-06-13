@@ -139,7 +139,8 @@ Event Stream
   -> Aggregate 再構築
   -> Version 確認
   -> New Event append
-  -> Projection 更新
+     -> Aggregate の次回再構築に使う
+     -> Projection を同期または非同期に更新
 ```
 
 用語:
@@ -153,6 +154,8 @@ Event Stream
 <!--
 話すこと:
 - Projectionは正本ではなく、イベント列から作られる読み取り用の状態として説明する。
+- Snapshotも正本ではなく、再構築を速くするためのキャッシュに近い。
+- Projectionは同一transactionで同期更新する場合も、非同期Consumerで更新する場合もある。
 - Optimistic concurrencyは、同時更新をロックで待たせるのではなく、version不一致として検出する考え方。
 -->
 ---

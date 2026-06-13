@@ -191,7 +191,8 @@ Application Business Rules
 Enterprise Business Rules
 ```
 
-内側ほど安定したルール。外側ほど技術詳細。
+内側ほど政策・業務意図に近く、外側の技術変更から保護したいもの。
+外側ほどフレームワーク、DB、外部APIなどの技術詳細。
 
 Onion Architecture も同じ問題意識を持つ。
 中心に Domain Model を置き、その外側に Application Services、さらに外側に Infrastructure を置く。
@@ -213,21 +214,27 @@ export type PaymentGateway = (input: ChargePayment) => Promise<ChargeResult>
 export const createStripePaymentGateway =
   (stripe: Stripe): PaymentGateway =>
   async (input) => {
-    const result = await stripe.paymentIntents.create({
-      amount: input.amount.value,
-      currency: input.amount.currency,
-    })
+    try {
+      const result = await stripe.paymentIntents.create({
+        amount: input.amount.value,
+        currency: input.amount.currency,
+      })
 
-    return { type: "charged", providerId: result.id }
+      return { type: "charged", providerId: result.id }
+    } catch (error) {
+      return mapStripeError(error)
+    }
   }
 ```
 
 ユースケースは Stripe ではなく、支払いという出力ポートに依存する。
+Stripe の例外やエラーコードは Adapter の中で、アプリケーションの失敗型へ変換する。
 
 <!--
 話すこと:
 - コード例は文法の細部より、依存の向き、責務の置き場所、変更時に触る範囲を見る。
 - TypeScript では type と const 関数を使った表現でも、設計上の境界や契約を表せることを確認する。
+- 境界の価値は差し替えだけではない。外部サービスの失敗表現をアプリケーションの言葉へ変換することも重要。
 - この形を必ず採用するという話ではなく、何を隠し、何を明示しているかを読む。
 -->
 ---

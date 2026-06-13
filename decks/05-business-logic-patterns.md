@@ -233,23 +233,28 @@ const cancelInvoice = (
 ```ts
 type CancelInvoiceUseCase = (invoiceId: string) => Promise<CancelInvoiceResult>
 
+type Clock = {
+  now: () => Date
+}
+
 const createCancelInvoiceUseCase =
   (deps: {
     transaction: TransactionRunner
+    clock: Clock
   }): CancelInvoiceUseCase =>
   async (invoiceId) => {
-    return deps.transaction.run(async ({ invoices, auditLog }) => {
+    return deps.transaction.run(async ({ invoices, auditLogRepository }) => {
       const invoice = await invoices.findById(invoiceId)
 
       if (!invoice) {
         return { type: "not_found" }
       }
 
-      const result = cancelInvoice(invoice, new Date())
+      const result = cancelInvoice(invoice, deps.clock.now())
 
       if (result.type === "cancelled") {
         await invoices.save(result.invoice)
-        await auditLog.record("invoice_cancelled", invoiceId)
+        await auditLogRepository.record("invoice_cancelled", invoiceId)
       }
 
       return result
@@ -260,6 +265,7 @@ const createCancelInvoiceUseCase =
 アプリケーションが提供する操作の入口になる。
 外部依存、トランザクション、応答の形を調整する。
 `transaction.run` の中で使う Repository は、同じ transaction に束縛されたものを受け取る。
+時間も外部依存なので、`Clock` から受け取る。
 
 同じ DB 内の更新は local transaction に入れる。
 外部ネットワーク I/O は、長い DB transaction の中で実行しない。

@@ -68,18 +68,23 @@ title: "第12回: 実プロダクト設計レビューとADR"
 | コード配置 | Package by Layer / Feature / Vertical Slice |
 | 依存境界 | Direct Dependency / Ports and Adapters |
 | 業務ロジック | Transaction Script / Domain Model |
-| データアクセス・マッピング | ORM直接 / Data Mapper / Repository |
-| 一貫性・変更追跡 | 明示的 transaction / ORM内蔵管理 / Unit of Work |
-| メッセージ意味 | Command / Event |
-| 配信・実装 | Sync / Async、HTTP / Queue / Broker |
+| 業務処理からのDBアクセス | ORM直接 / Query Object / Repository |
+| DB行と業務型の変換 | 同一モデル / Mapper |
+| transaction境界 | Use Case内 / Transaction Runner / Framework管理 |
+| 変更追跡 | 明示保存 / ORM Change Tracking / Unit of Work |
+| 応答方式 | Sync / Async |
+| Transport | Function / HTTP / Queue / Broker |
+| Message semantics | Command / Event |
+| Delivery semantics | at-most-once / at-least-once |
 | デプロイ | Monolith / Modular Monolith / Microservices |
 
-Repository と Unit of Work、Queue と Event-driven のように、共存する軸を混ぜない。
+Repository 内部で Mapper を使う、Unit of Work が transaction を管理する、Command Message を Queue で配送する、という組み合わせは成立する。
 
 <!--
 話すこと:
 - 前回指摘された非直交な表をここで解消する。
 - 一つの列から選ぶのではなく、各軸で判断する。
+- 共存するものを排他的な選択肢として扱わない。
 -->
 ---
 
@@ -88,23 +93,35 @@ Repository と Unit of Work、Queue と Event-driven のように、共存する
 ```md
 # ADR: 請求書発行の境界をどう設計するか
 
+## Status
+Proposed / Accepted / Superseded
+
+## Date
+YYYY-MM-DD
+
+## Owners
+判断を保守する人、チーム
+
 ## Decision
 何を選ぶか
 
 ## Context
 どの変更、障害、制約が問題だったか
 
-## Reason
+## Reason / Rationale
 なぜその軸でその選択をしたか
 
-## Trade-offs
-増える実装量、学習コスト、運用コスト
+## Consequences / Trade-offs
+良い結果と悪い結果。増える実装量、学習コスト、運用コスト
 
 ## Rules
 Port を作る基準、例外、見直し条件
 
 ## Rejected Options
 なぜ選ばないか
+
+## Related Decisions
+関連ADR
 ```
 
 <!--
@@ -128,6 +145,9 @@ Drivers:
 
 Current design:
 現在の依存、データ、transaction、外部I/O
+
+Security:
+誰が操作できるか、他テナントのデータへ触れないか、機密情報を外部へ送らないか、監査対象か
 
 Problems:
 どの変更や障害が難しいか
@@ -188,6 +208,7 @@ ADR は、その中の重要な一つの判断を記録するもの。
 | 一貫性 | transaction、unique constraint、冪等性が必要か |
 | メッセージング | Command / Event、Sync / Async、Queue / Broker を混同していないか |
 | 読み書き | CQRS が必要なほどモデルやスケールが違うか |
+| セキュリティ | 権限、テナント境界、機密情報、監査対象を確認したか |
 
 これは「Vertical Slice + Hexagonal だから正しい」ではない。
 各軸で必要なトレードオフだけ選ぶ。
@@ -245,6 +266,7 @@ Review:
 | 代替案 | 最低2案を出せる |
 | Trade-off | 利点とコストを両方説明できる |
 | Failure mode | 並行実行、部分失敗、再試行を考慮できる |
+| Security | 権限、テナント境界、機密情報、監査を確認できる |
 | 判断 | 制約に基づいて一案を選べる |
 | 不確実性 | 足りない情報を言える |
 | 見直し条件 | 将来の再判断条件を残せる |
