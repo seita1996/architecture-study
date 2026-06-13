@@ -339,6 +339,8 @@ export type IssueInvoicePersistence = {
 }
 ```
 
+以下は依存方向だけを見るための簡略版。
+失敗契約は省略している。
 この例では並行実行制御を省略している。
 PortやDomain Modelだけでは二重発行を防げない。
 DB障害や保存時の競合も省略している。
