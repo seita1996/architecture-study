@@ -379,6 +379,156 @@ N/Aは点数計算から除外します。
 
 合計点は参考値です。常に評価する項目に0点がないか、問題に関係する項目をN/Aにした理由が妥当か、前後比較でどの観点が伸びたかを重視します。前後比較では、常に評価する項目を中心に見て、問題依存項目は定性的に比較します。ただし、Failure mode、整合性、品質特性に関わる重大な見落としがある場合は、点数だけで到達度を判断しません。性能、可用性、運用性、セキュリティは、この勉強会だけで解決能力までは評価せず、追加計測や専門レビューが必要な論点として識別できるかを見ます。
 
+## 参考文献・発展学習
+
+このカリキュラムでは、特定のアーキテクチャやパターンを唯一の正解として扱わず、それぞれが解決する問題、成立条件、トレードオフを理解することを重視しています。
+以下は、教材レビューで参照したWeb資料と、各テーマをさらに深く学ぶための書籍です。
+
+### Web資料
+
+#### エンタープライズアプリケーションの業務ロジック
+
+- [Transaction Script — Martin Fowler](https://martinfowler.com/eaaCatalog/transactionScript.html)  
+  一つの業務要求を、一つの手続きとして処理するパターン。
+- [Domain Model — Martin Fowler](https://martinfowler.com/eaaCatalog/domainModel.html)  
+  業務データと振る舞いを一体として表現するモデル。
+- [Service Layer — Martin Fowler](https://martinfowler.com/eaaCatalog/serviceLayer.html)  
+  アプリケーションが提供する操作の境界と、処理の調整責務。
+
+#### 永続化パターン
+
+- [Repository — Martin Fowler](https://martinfowler.com/eaaCatalog/repository.html)  
+  Domain ModelとData Mapperの間を、コレクションのようなインターフェースで仲介する。
+- [Data Mapper — Martin Fowler](https://martinfowler.com/eaaCatalog/dataMapper.html)  
+  インメモリの業務オブジェクトとDB表現を互いに独立させる。
+- [Unit of Work — Martin Fowler](https://martinfowler.com/eaaCatalog/unitOfWork.html)  
+  一つの業務処理で変更されたオブジェクトを追跡し、保存と競合解決を調整する。
+- [Patterns of Enterprise Application Architecture — Martin Fowler](https://martinfowler.com/books/eaa.html)  
+  Transaction Script、Domain Model、Repository、Data Mapper、Unit of Workなどを含むパターンカタログ。
+
+#### 依存関係とアーキテクチャスタイル
+
+- [Hexagonal Architecture — Alistair Cockburn](https://alistair.cockburn.us/hexagonal-architecture/)  
+  Ports and Adaptersの原典。外部技術からアプリケーションの内側を隔離する考え方。
+- [The Clean Architecture — Robert C. Martin](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)  
+  Dependency Ruleと、Entities、Use Cases、Interface Adapters、Frameworksの関係。
+- [The Onion Architecture: Part 1 — Jeffrey Palermo](https://jeffreypalermo.com/2008/07/29/the-onion-architecture-part-1/)  
+  Domain Modelを中心に置き、外部依存を外側へ配置する構造。
+- [Vertical Slice Architecture — Jimmy Bogard](https://www.jimmybogard.com/vertical-slice-architecture/)  
+  技術責務ではなく、変更やユースケースの単位でコードをまとめる考え方。
+
+#### CQS、CQRS、Event Sourcing
+
+- [Command Query Separation — Martin Fowler](https://martinfowler.com/bliki/CommandQuerySeparation.html)  
+  状態を変更するCommandと、観測可能な状態を変更しないQueryを分ける原則。
+- [CQRS — Martin Fowler](https://martinfowler.com/bliki/CQRS.html)  
+  読み取りと書き込みで異なるモデルを使用する設計。
+- [Event Sourcing — Martin Fowler](https://martinfowler.com/eaaDev/EventSourcing.html)  
+  状態変更のイベント列を正本として状態を再構築する保存方式。
+- [CQRS Pattern — Microsoft Azure Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs)  
+  CQRSの適用条件、利点、同期コスト、導入上の注意。
+- [Event Sourcing Pattern — Microsoft Azure Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing)  
+  Event Store、Projection、再構築、競合などの実装・運用上の論点。
+
+#### モノリスとサービス境界
+
+- [Monolith First — Martin Fowler](https://martinfowler.com/bliki/MonolithFirst.html)  
+  境界が不明確な初期段階からMicroservicesを採用することのリスク。
+- [Microservices — Martin Fowler and James Lewis](https://martinfowler.com/articles/microservices.html)  
+  Microservicesに共通して見られる性質と、サービス境界、データ所有、運用の考え方。
+
+#### メッセージング、Outbox、冪等性
+
+- [Transactional Outbox Pattern — AWS Prescriptive Guidance](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html)  
+  DB更新とメッセージ送信の片成功を避けるためのOutboxパターン。
+- [Transactional Outbox — microservices.io](https://microservices.io/patterns/data/transactional-outbox.html)  
+  Outboxの構造、Relay、重複配送、Consumerの冪等性。
+- [Idempotent Consumer — microservices.io](https://microservices.io/patterns/communication-style/idempotent-consumer.html)  
+  at-least-once配送で同じメッセージを複数回受信することへの対処。
+- [Enterprise Integration Patterns](https://www.enterpriseintegrationpatterns.com/)  
+  Command Message、Event Message、Point-to-Point Channel、Publish-Subscribe Channel、Idempotent Receiver、Dead Letter Channelなどのパターンカタログ。
+> この教材では説明を明確にするため、DBのJob行をWorkerが直接処理する構成を「Transactional Job Queue」、RelayがBrokerへメッセージを送る構成を「Transactional Outbox」と呼び分けています。呼称の境界は文献や製品によって異なります。
+
+#### Architecture Decision Record
+
+- [Documenting Architecture Decisions — Michael Nygard](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions)  
+  Architecture Decision Recordの原典。Status、Context、Decision、Consequencesからなる簡潔な形式。
+
+#### Domain-Driven Design
+
+- [DDD Resources — Domain Language](https://www.domainlanguage.com/ddd/)  
+  Eric EvansによるDDDの公式リソース集。DDD Referenceも公開されている。
+
+### 技術書
+
+#### 最初に読む
+
+| 書籍 | 著者 | 主な対応テーマ |
+|---|---|---|
+| [Clean Architecture: A Craftsman's Guide to Software Structure and Design](https://www.informit.com/store/clean-architecture-a-craftsmans-guide-to-software-structure-9780134494272) | Robert C. Martin | SOLID、Dependency Rule、Use Case、境界、Ports |
+| [Patterns of Enterprise Application Architecture](https://martinfowler.com/books/eaa.html) | Martin Fowlerほか | Transaction Script、Domain Model、Service Layer、Repository、Data Mapper、Unit of Work |
+| [Fundamentals of Software Architecture](https://www.oreilly.com/library/view/fundamentals-of-software/9781492043447/) | Mark Richards、Neal Ford | 品質特性、Architecture Driver、アーキテクチャスタイル、トレードオフ |
+| [Learning Domain-Driven Design](https://www.oreilly.com/library/view/learning-domain-driven-design/9781098100124/) | Vlad Khononov | 業務ロジック、Bounded Context、Domain Model、境界設計 |
+
+#### Domain ModelとDDDを深める
+
+| 書籍 | 著者 | 主な対応テーマ |
+|---|---|---|
+| [Domain-Driven Design: Tackling Complexity in the Heart of Software](https://www.domainlanguage.com/ddd/) | Eric Evans | Ubiquitous Language、Entity、Value Object、Aggregate、Repository、Bounded Context |
+| [Implementing Domain-Driven Design](https://www.informit.com/store/implementing-domain-driven-design-9780321834577) | Vaughn Vernon | DDDパターンの具体的な実装、Application Service、Domain Event、Repository |
+| [A Philosophy of Software Design, 2nd Edition](https://web.stanford.edu/~ouster/cgi-bin/book.php) | John Ousterhout | 複雑性、深いモジュール、情報隠蔽、インターフェース設計 |
+
+#### システム全体のアーキテクチャ判断を深める
+
+| 書籍 | 著者 | 主な対応テーマ |
+|---|---|---|
+| [Software Architecture in Practice, 4th Edition](https://www.informit.com/store/software-architecture-in-practice-9780136886099) | Len Bass、Paul Clements、Rick Kazman | 品質特性シナリオ、Architecture Driver、設計・評価方法 |
+| [Software Architecture: The Hard Parts](https://www.oreilly.com/library/view/software-architecture-the/9781492086888/) | Neal Ford、Mark Richards、Pramod Sadalage、Zhamak Dehghani | サービス粒度、分散トランザクション、データ所有、ワークフロー、トレードオフ |
+| [Building Evolutionary Architectures, 2nd Edition](https://www.oreilly.com/library/view/building-evolutionary-architectures/9781492097532/) | Neal Ford、Rebecca Parsons、Patrick Kua、Pramod Sadalage | Fitness Function、変更可能性、継続的なアーキテクチャ検証 |
+
+#### データ、整合性、分散システムを深める
+
+| 書籍 | 著者 | 主な対応テーマ |
+|---|---|---|
+| [Designing Data-Intensive Applications, 2nd Edition](https://www.oreilly.com/library/view/designing-data-intensive-applications/9781098119058/) | Martin Kleppmann、Chris Riccomini | transaction、分離レベル、レプリケーション、分散障害、整合性、ストリーム処理 |
+| [Release It! Second Edition](https://pragprog.com/titles/mnee2/release-it-second-edition/) | Michael Nygard | timeout、Circuit Breaker、Bulkhead、障害連鎖、可用性、運用設計 |
+| [Enterprise Integration Patterns](https://www.enterpriseintegrationpatterns.com/) | Gregor Hohpe、Bobby Woolf | Command／Event Message、Channel、Routing、冪等性、DLQ、非同期メッセージング |
+
+#### モジュール、Microservices、移行を深める
+
+| 書籍 | 著者 | 主な対応テーマ |
+|---|---|---|
+| [Building Microservices, 2nd Edition](https://www.oreilly.com/library/view/building-microservices-2nd/9781492034018/) | Sam Newman | サービス境界、通信方式、データ所有、障害、運用 |
+| [Monolith to Microservices](https://www.oreilly.com/library/view/monolith-to-microservices/9781492047834/) | Sam Newman | モノリスの段階的分割、Strangler Fig、データ移行、分解リスク |
+| [Hexagonal Architecture Explained](https://www.hexagonalarchitectureexplained.com/) | Alistair Cockburn、Juan Manuel Garrido de Paz | Ports and Adaptersの原則、Input／Output Port、Adapter、テスト可能性 |
+
+### 推奨読書順
+
+#### 基礎
+
+1. *Clean Architecture*
+2. *Patterns of Enterprise Application Architecture*
+3. *Fundamentals of Software Architecture*
+
+#### 業務ロジックと境界設計
+
+4. *Learning Domain-Driven Design*
+5. *Domain-Driven Design*
+6. *Implementing Domain-Driven Design*
+
+#### 整合性・障害・分散処理
+
+7. *Release It!*
+8. *Designing Data-Intensive Applications*
+9. *Enterprise Integration Patterns*
+
+#### サービス境界と発展的な設計判断
+
+10. *Software Architecture: The Hard Parts*
+11. *Building Microservices*
+12. *Building Evolutionary Architectures*
+すべてを最初から通読する必要はありません。勉強会の各回で扱った概念について、Web資料で原典の定義を確認し、必要になったテーマから対応する書籍を読むことを推奨します。
+
 ## 中心メッセージ
 
 パターンは万能な正解ではない。特定の文脈で繰り返し現れる問題に対する、名前の付いた解決構造であり、利点とコストを伴う。
