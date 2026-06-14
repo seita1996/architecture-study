@@ -346,6 +346,7 @@ export type IssueInvoicePersistence = {
 ```
 
 以下は依存方向だけを見るための簡略版。
+`contractId`、`amount` など、状態遷移に直接関係しない業務属性は省略している。
 失敗契約は省略している。
 この例では並行実行制御を省略している。
 PortやDomain Modelだけでは二重発行を防げない。
@@ -357,7 +358,9 @@ DB障害や保存時の競合も省略している。
 - Input Portは外部からアプリケーションを呼ぶ契約。
 - Application ServiceはPortの型を満たし、Domain関数とOutput Portを使う。
 - `IssueInvoicePersistence` は汎用Repositoryではなく、請求書発行ユースケース専用のOutput Port。Portは目的ある対話を表す。
+- `clock` の関数契約も、アプリケーションから外部時刻を利用するOutput Portと見なせる。Portごとに必ず専用ファイルを作る必要はない。
 - 全状態を返し、Application Serviceで「存在しない」と「状態が不適切」を分ける。
+- 依存方向に集中するため、`contractId`、`amount` などは省略している。
 - このコードでは並行発行の制御と、DB障害・保存時競合の失敗契約を省略している。実際にはversion付き条件更新、`WHERE status = 'draft'` による conditional update、transaction、冪等性キー、`saved / conflict / temporarily_unavailable` のような結果型を検討する。Portを置くだけでは整合性は守れない。
 - 小規模ではDomain型をInput Portの結果として返してもよいが、外部契約を安定させたい場合はApplication DTOへ変換する。
 -->
@@ -435,6 +438,9 @@ const issueInvoiceUseCase = createIssueInvoice({
 const invoiceRoute = createInvoiceRoute(issueInvoiceUseCase)
 ```
 
+`toInvoice` による状態と日時の整合性検証、
+マッピング失敗の扱いは省略している。
+
 ヒント:
 
 - HTTP を受けるものは何か
@@ -482,6 +488,9 @@ Unknowns:
 | `main.ts` | Composition Root |
 
 Composition Root は、依存オブジェクトを組み立て、アプリケーションの入口へ渡す場所。
+`clock` の関数契約も、外部時刻を利用するための Output Port と見なせる。
+`systemClock` はその Adapter である。
+Portごとに必ず専用ファイルを作る必要はない。
 
 重要なのは、名前を当てることではない。
 
